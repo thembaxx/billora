@@ -1,0 +1,29 @@
+# Billora
+
+> Your municipal accounts, together. A browser-local municipal account organiser for South Africa.
+
+Billora helps homeowners, tenants, landlords and businesses organise municipal statements and properties. It is an independent application, not a municipal authority or payment processor.
+
+## Product
+
+- Four screens: Overview, Properties, Statements and Insights.
+- Import a PDF up to 15 MB. Text extraction runs on the device; users review and enter totals, statement periods, due dates and optional category amounts.
+- Original PDFs live in IndexedDB; account metadata and preferences live in localStorage.
+- Calendar reminders download as ICS files. Query letters are drafts downloaded as text; they are not lodged automatically.
+- Payment buttons link to official municipal portals. Billora does not accept payments or verify settlement.
+- The initial accounts are labelled illustrative sample data, dated May–October 2026. Settings can clear the workspace before entering real accounts.
+- Light, dark and system themes, reduced motion, hidden balances, offline app shell and PWA installation support.
+
+## Data meaning
+
+Balances are imported or illustrative, never verified live municipal balances. A personal “marked paid” flag is not a payment confirmation. Spending charts use imported category amounts; unallocated amounts are labelled accordingly. Insights do not establish billing errors.
+
+## Privacy and limitations
+
+There is no cloud account, authentication, cross-device sync, background push notification or private municipal integration in this release. Browser-local storage is not an encrypted vault. Data may be lost if browser storage is cleared. Export account JSON and keep original PDF copies. Do not assume a hosted deployment provides server-side statement storage.
+
+## Source
+
+- [Repository](https://github.com/thembaxx/billora): source code, setup and implementation notes.
+- [Theming reference](https://web.dev/learn/design/theming): browser and system theme guidance.
+- [EasyUI](https://easyui.site/components): adapted animated tabs and rolling numbers.

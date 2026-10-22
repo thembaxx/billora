@@ -1,0 +1,53 @@
+{
+  "name": "billora",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A calm municipal account workspace for South Africa",
+  "keywords": [],
+  "homepage": "https://github.com/thembaxx/billora#readme",
+  "bugs": {
+    "url": "https://github.com/thembaxx/billora/issues"
+  },
+  "license": "UNLICENSED",
+  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thembaxx/billora.git"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "lint": "oxlint --deny-warnings src tests",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check .",
+    "test": "playwright test"
+  },
+  "dependencies": {
+    "@fontsource-variable/geist": "^5.3.0",
+    "@fontsource-variable/geist-mono": "^5.3.0",
+    "@gsap/react": "^2.1.2",
+    "@phosphor-icons/react": "^2.1.10",
+    "gsap": "^3.15.0",
+    "idb-keyval": "^6.3.0",
+    "motion": "^14.6.0",
+    "pdfjs-dist": "^6.4.299",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.64.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/three": "^0.186.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "oxfmt": "^0.74.0",
+    "oxlint": "^1.89.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5",
+    "vite-plugin-pwa": "^2.0.0"
+  }
+}

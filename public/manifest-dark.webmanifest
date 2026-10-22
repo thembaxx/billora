@@ -1,0 +1,75 @@
+{
+  "name": "Billora \u2014 Your municipal accounts, together",
+  "short_name": "Billora",
+  "description": "A little clarity for everything home. Organise South African municipal accounts, statements and reminders.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#17181c",
+  "theme_color": "#17181c",
+  "lang": "en-ZA",
+  "scope": "/",
+  "id": "/",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "orientation": "any",
+  "categories": ["finance", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Import a statement",
+      "url": "/?import=1",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "My properties",
+      "url": "/?view=properties"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/images/app-desktop.png",
+      "sizes": "1440x1000",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "The Billora workspace"
+    },
+    {
+      "src": "/images/app-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Municipal accounts on the move"
+    }
+  ],
+  "file_handlers": [
+    {
+      "action": "/?import=1",
+      "accept": {
+        "application/pdf": [".pdf"]
+      }
+    }
+  ]
+}
