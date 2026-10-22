@@ -39,3 +39,11 @@ Property illustrations are downloaded from Unsplash and stored locally for offli
 ## Fonts and libraries
 
 Geist and Geist Mono are distributed through Fontsource under the SIL Open Font License. Phosphor icons are MIT licensed. Three.js, React, Motion, GSAP, PDF.js and other package licences are retained in their npm distributions.
+
+## Anatomy
+
+The isometric geometry kit in `scripts/vendor/anatomy-iso.mjs` is from [Anatomy by Ryan](https://github.com/wheresryan22/anatomy), copyright (c) 2026 Ryan, used under the MIT License. The complete licence is preserved in `scripts/vendor/ANATOMY-LICENSE`. The cabinet geometry, category mapping and interaction are original Billora work.
+
+## Billora logo
+
+The current original b monogram was created with OpenAI Image Gen using user-provided references for visual inspiration. Its source raster is retained in `public/brand/billora-master.png`; `scripts/brand-assets.mjs` prepares application and PWA assets.

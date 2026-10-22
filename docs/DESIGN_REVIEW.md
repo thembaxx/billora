@@ -1,0 +1,15 @@
+# Billora design review
+
+Scope: polish the existing four-screen app and branding, add the requested Anatomy illustration, and demonstrate cloud accounts and authorised municipal connections with explicit simulation labels.
+
+Product Design's brief and audit guidance was applied to current Billora captures. The dedicated plugin Browser surface was not available in this session; the evidence below was captured and inspected in workspace Chromium. This report does not claim the plugin-specific browser QA gate or real-device Safari verification.
+
+1. **Overview — improved.** [Desktop](screenshots/01-overview-desktop.png) and [mobile](screenshots/02-overview-mobile.png) show the new original b mark, shorter headings, readable metadata and a consistent four-item navigation. Sample balances remain labelled. The new mark is also used for favicons, PWA icons, launch images and social previews.
+2. **Statements — improved.** [Mobile library](screenshots/03-statements-mobile.png) displays amount, due date and source within each statement card. Users no longer need to scroll a wide table sideways to find those details. Desktop retains the table and filters.
+3. **Demo profile — clear.** [Account creation](screenshots/04-demo-profile-mobile.png) asks for made-up details without a password. The disclosure says no real cloud account is created, no municipality is connected and no data is sent. A wide-dialog mobile clipping issue found during capture was corrected at the shared dialog layer.
+4. **Authorised connection demo — clear.** [Simulated municipal connection](screenshots/05-demo-connection-mobile.png) requires demo authorisation and displays a demo reference, simulated balance and demo statement count. Sync, JSON response, disconnect and reset work. The response explicitly records no live connection, no cloud storage and no payment processing.
+5. **Theme and Anatomy — verified within scope.** [Dark connection](screenshots/06-demo-connection-dark.png) keeps the disclosure labels visible. The [Anatomy bill cabinet](screenshots/07-anatomy-dark.png) has 79 purposeful parts and four working drawers. Drawer selection, readout and chart breakdown use the same category totals. Light and dark 4× detail captures were inspected; all four resting poses passed Anatomy’s line-end check in both themes. Printed label rules are intentionally free-ended text.
+
+Validation: production build, Oxlint, Oxfmt and six Playwright journeys passed. Responsive screens were checked at 320, 390, 768, 1024 and 1440 pixels. The demo journey runs at 390 pixels and checks that its dialog fits the viewport, that demo state persists and resets, and that it makes no external requests. Axe checks cover the dashboard, settings and demo connection dialog; a further dark mobile demo scan found no A/AA violations. Screenshots and automated checks do not prove complete accessibility compliance.
+
+The cloud/municipal demo remains separate from imported statements and payment notes. Real authentication, cloud persistence and municipal integrations still require a production backend and authorised provider agreements.

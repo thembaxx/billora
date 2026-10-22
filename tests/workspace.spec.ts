@@ -163,3 +163,69 @@ test('responsive screens have no horizontal overflow, with accessible controls',
     dialogResults.violations.map((v) => ({ id: v.id, nodes: v.nodes.map((n) => n.target) })),
   ).toEqual([]);
 });
+
+test('demo profile, authorisation and municipal sync are clearly simulated', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const external: string[] = [];
+  page.on('request', (r) => {
+    if (new URL(r.url()).hostname !== '127.0.0.1') external.push(r.url());
+  });
+  await page.goto('/?view=properties');
+  await page.getByRole('button', { name: 'Explore demo', exact: true }).click();
+  await expect(page.getByRole('dialog')).toContainText(
+    'No cloud account is created, no municipality is connected',
+  );
+  const dialogBounds = await page.getByRole('dialog').boundingBox();
+  expect(
+    dialogBounds && dialogBounds.x >= 0 && dialogBounds.x + dialogBounds.width <= 390,
+  ).toBeTruthy();
+  await page.getByLabel('Demo display name').fill('Alex Demo');
+  await page.getByLabel('Demo email address').fill('alex@example.com');
+  await page.getByRole('button', { name: 'Create demo cloud account' }).click();
+  await expect(page.getByText('Demo profile · stored on this device')).toBeVisible();
+  await page.getByLabel('Property for demo connection').selectOption('rental');
+  await page.getByLabel('For this demo, I confirm I’m authorised').check();
+  await page.getByRole('button', { name: 'Connect demo account', exact: true }).click();
+  await expect(page.getByText('DEMO CONNECTION', { exact: true })).toBeVisible();
+  await expect(page.locator('.demo-connection')).toContainText('Simulated balance');
+  await expect(page.locator('.demo-connection')).toContainText('1,865.40');
+  await page.getByRole('button', { name: 'Run demo sync' }).click();
+  await expect(page.getByRole('status')).toContainText('Demo sync complete.');
+  const saved = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem('billora-demo') || 'null'),
+  );
+  expect(saved.account.demo).toBe(true);
+  expect(saved.connections[0].demo).toBe(true);
+  await page.getByRole('button', { name: 'Close dialog' }).click();
+  await page.reload();
+  await page.getByRole('button', { name: 'Explore demo', exact: true }).click();
+  await expect(page.getByText('alex@example.com', { exact: true })).toBeVisible();
+  await expect(page.getByText('DEMO CONNECTION', { exact: true })).toBeVisible();
+  const audit = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+    .analyze();
+  expect(audit.violations.map((v) => ({ id: v.id, nodes: v.nodes.map((n) => n.target) }))).toEqual(
+    [],
+  );
+  await page.getByRole('button', { name: 'Disconnect demo', exact: true }).click();
+  await expect(page.locator('.demo-connection')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Reset demo account & connections' }).click();
+  await expect(page.getByRole('button', { name: 'Create demo cloud account' })).toBeVisible();
+  expect(external).toEqual([]);
+});
+
+test('Anatomy drawer reads the same category values and respects privacy', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/?view=insights');
+  const cabinet = page.locator('.account-cabinet');
+  await cabinet.getByRole('button', { name: 'Water', exact: true }).click();
+  await expect(cabinet.locator('.cabinet-readout')).toContainText('801.00');
+  await expect(cabinet.locator('[data-drawer="1"]')).toHaveAttribute('data-active', 'true');
+  await page.getByRole('button', { name: 'Open settings' }).click();
+  await page.getByRole('switch', { name: 'Hide balances' }).click();
+  await page.getByRole('button', { name: 'Close dialog' }).click();
+  await expect(cabinet.locator('.cabinet-readout')).toContainText('R •••••');
+  const robots = await page.request.get('/robots.txt');
+  expect(robots.ok()).toBe(true);
+  expect(await robots.text()).toContain('Sitemap:');
+});

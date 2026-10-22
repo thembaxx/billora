@@ -7,7 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['logo.svg', 'icons/*.png', 'images/*.webp', '*.webmanifest'],
+      includeAssets: ['logo.png', 'favicon.png', 'icons/*.png', 'images/*.webp', '*.webmanifest'],
       manifest: {
         id: '/',
         name: 'Billora — Your municipal accounts, together',
@@ -62,6 +62,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,mjs,css,html,ico,png,svg,webp,woff2}'],
+        globIgnores: ['**/brand/**'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         navigateFallback: '/index.html',
         cleanupOutdatedCaches: true,

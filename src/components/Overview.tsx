@@ -10,6 +10,7 @@ import {
   SparkleIcon,
   DropIcon,
   ShieldCheckIcon,
+  CloudIcon,
 } from '@phosphor-icons/react';
 import type { Property, Settings, View, Workspace } from '../types';
 import { dateLabel, latestStatements } from '../lib/data';
@@ -28,6 +29,7 @@ interface Props {
   onProperty: (p: Property) => void;
   onReminders: () => void;
   onTour: () => void;
+  onDemo: () => void;
 }
 export function Overview({
   data,
@@ -38,6 +40,7 @@ export function Overview({
   onProperty,
   onReminders,
   onTour,
+  onDemo,
 }: Props) {
   const latest = latestStatements(data);
   const total = latest.reduce((a, s) => a + s.amount, 0);
@@ -281,6 +284,16 @@ export function Overview({
               </span>
               <ArrowRightIcon />
             </button>
+            <button onClick={onDemo}>
+              <span className="step-circle">
+                <CloudIcon />
+              </span>
+              <span>
+                Try a connected workspace
+                <small>Cloud accounts & municipal connections · Demo</small>
+              </span>
+              <ArrowRightIcon />
+            </button>
           </div>
         </section>
         <section className="card reassurance-card reveal">
@@ -304,7 +317,7 @@ export function Overview({
       </div>
       <footer className="app-footer">
         <span>
-          <img src="/logo.svg" width="19" alt="" />
+          <img src="/logo.png" width="19" alt="" />
           billora<span className="footer-dot">.</span>
           <small>A little clarity for everything home.</small>
         </span>

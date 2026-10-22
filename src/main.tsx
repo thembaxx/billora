@@ -4,6 +4,7 @@ import '@fontsource-variable/geist';
 import '@fontsource-variable/geist-mono';
 import App from './App';
 import './styles.css';
+import './polish.css';
 
 class AppBoundary extends React.Component<{ children: React.ReactNode }, { failed: boolean }> {
   state = { failed: false };
@@ -13,7 +14,7 @@ class AppBoundary extends React.Component<{ children: React.ReactNode }, { faile
   render() {
     return this.state.failed ? (
       <main className="recovery">
-        <img src="/logo.svg" width="64" alt="Billora" />
+        <img src="/logo.png" width="64" alt="Billora" />
         <h1>Let’s get you back home.</h1>
         <p>Billora couldn’t open this screen. Your saved account data is still on this device.</p>
         <button className="button primary" onClick={() => location.reload()}>

@@ -20,7 +20,7 @@ Balances are imported or illustrative, never verified live municipal balances. A
 
 ## Privacy and limitations
 
-There is no cloud account, authentication, cross-device sync, background push notification or private municipal integration in this release. Browser-local storage is not an encrypted vault. Data may be lost if browser storage is cleared. Export account JSON and keep original PDF copies. Do not assume a hosted deployment provides server-side statement storage.
+Cloud account and authorised municipal integration demonstrations are clearly labelled DEMO INTEGRATION and run only in the browser. Made-up demo profiles and consent records use localStorage; sync results are fixtures with demo: true and no live connection. Demo balances do not alter imported statements. There is no real cloud account, authentication, cross-device sync, background push notification or private municipal integration in this release. Browser-local storage is not an encrypted vault. Data may be lost if browser storage is cleared. Export account JSON and keep original PDF copies. Do not assume a hosted deployment provides server-side statement storage.
 
 ## Source
 

@@ -16,17 +16,20 @@ import type { Property, Settings, Statement, Workspace } from '../types';
 import { latestStatements, money, dateLabel, download } from '../lib/data';
 import { PropertyCard } from './PropertyCard';
 import { SpendingChart } from './SpendingChart';
+import { AccountCabinet } from './AccountCabinet';
 
 export function Properties({
   data,
   settings,
   onAdd,
   onProperty,
+  onDemo,
 }: {
   data: Workspace;
   settings: Settings;
   onAdd: () => void;
   onProperty: (p: Property) => void;
+  onDemo: () => void;
 }) {
   const [filter, setFilter] = useState('All properties');
   const latest = latestStatements(data);
@@ -73,6 +76,19 @@ export function Properties({
             Add a property
             <ArrowUpRightIcon />
           </span>
+        </button>
+      </div>
+      <div className="demo-entry demo-entry-wide">
+        <div>
+          <span className="demo-label">DEMO INTEGRATION</span>
+          <h3>See what a connected account could feel like.</h3>
+          <p>
+            Preview a cloud profile, authorisation and municipal account sync using simulated data.
+          </p>
+        </div>
+        <button className="button secondary" onClick={onDemo}>
+          Explore demo
+          <ArrowUpRightIcon />
         </button>
       </div>
       <div className="info-banner">
@@ -178,6 +194,35 @@ export function Statements({
             </button>
           </div>
         </div>
+        <ul className="mobile-statements" aria-label="Municipal statements">
+          {rows.map((s) => (
+            <li key={s.id}>
+              <button onClick={() => onStatement(s)} className="mobile-statement">
+                <span className="mobile-statement-heading">
+                  <span className="file-icon">
+                    <FileTextIcon size={22} weight="duotone" />
+                  </span>
+                  <span>
+                    <strong>
+                      {data.properties.find((p) => p.id === s.propertyId)?.name || 'Property'}
+                    </strong>
+                    <small>{dateLabel(s.period + '-01', { month: 'long', year: 'numeric' })}</small>
+                  </span>
+                  <ArrowUpRightIcon size={18} />
+                </span>
+                <span className="mobile-statement-detail">
+                  <strong className="numeric">
+                    {settings.hideBalances ? 'R •••••' : money(s.amount)}
+                  </strong>
+                  <span>Due {dateLabel(s.dueDate)}</span>
+                  <span className={`source-badge ${s.source}`}>
+                    {s.source === 'sample' ? 'Sample' : 'Imported'}
+                  </span>
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
         <div className="table-scroll">
           <table>
             <thead>
@@ -315,33 +360,21 @@ export function Insights({ data, settings }: { data: Workspace; settings: Settin
               </div>
             ))}
           </div>
-        </section>
-        <section className="card insight-explainer">
-          <span className="insight-icon">
-            <SparkleIcon size={24} />
-          </span>
-          <h2>
-            Clarity comes
-            <br />
-            from context.
-          </h2>
-          <p>
-            Compare a few months of statements to spot changes worth a closer look. A higher total
-            can come from tariffs, usage or estimated readings.
-          </p>
-          <div className="note-box">
-            <strong>A helpful starting point</strong>
-            <p>
-              These insights use your imported figures. They don’t confirm billing errors or
-              represent live municipal data.
-            </p>
+          <div className="note-box category-context">
+            <div>
+              <strong>Make room for a closer look.</strong>
+              <p>
+                A change can come from usage, tariffs or estimated readings. These figures help you
+                compare statements; they don’t confirm billing errors or a live municipal balance.
+              </p>
+            </div>
           </div>
-          <span className="tiny-tag">
-            {data.statements.some((s) => s.source === 'sample')
-              ? 'Includes illustrative sample data'
-              : 'Based on your reviewed imports'}
-          </span>
         </section>
+        <AccountCabinet
+          data={data}
+          hidden={settings.hideBalances}
+          reduced={settings.reduceMotion}
+        />
       </div>
     </>
   );

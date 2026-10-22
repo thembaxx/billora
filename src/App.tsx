@@ -40,6 +40,7 @@ import { PropertyDetail, StatementDetail } from './components/DetailDialogs';
 import { SettingsDialog } from './components/SettingsDialog';
 import { Onboarding } from './components/Onboarding';
 import { Flower } from './components/Flower';
+import { DemoConnections } from './components/DemoConnections';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 const nav = [
@@ -50,23 +51,23 @@ const nav = [
 ];
 const pages: Record<View, { title: string; description: string }> = {
   overview: {
-    title: 'A little clarity.\nA lot more peace of mind.',
+    title: 'A little clarity.\nFor everything home.',
     description: 'Your municipal accounts, together. Just as they should be.',
   },
   properties: {
-    title: 'Every place.\nA little more organised.',
+    title: 'All your places.\nOne clear picture.',
     description: 'Home, rental or business. There’s a place for all of them.',
   },
   statements: {
-    title: 'Less paperwork.\nMore perspective.',
+    title: 'Every statement.\nIn its right place.',
     description: 'Every statement, thoughtfully in its place.',
   },
   insights: {
-    title: 'See the bigger picture.\nUnderstand the little things.',
+    title: 'Make sense\nof your spending.',
     description: 'A clearer view of what goes into your everyday.',
   },
 };
-type Dialog = 'settings' | 'import' | 'add' | 'search' | 'reminders' | 'tour' | null;
+type Dialog = 'settings' | 'import' | 'add' | 'search' | 'reminders' | 'tour' | 'demo' | null;
 interface InstallPrompt extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: string }>;
@@ -288,7 +289,7 @@ export default function App() {
           onClick={() => navigate('overview')}
           aria-label="Billora overview"
         >
-          <img src="/logo.svg" alt="" />
+          <img src="/logo.png" alt="" />
           <span>
             billora<span>.</span>
           </span>
@@ -354,7 +355,7 @@ export default function App() {
                   : 'evening'}
               , {settings.name}
               <span className="greeting-divider" />
-              Let’s make room for clarity.
+              <span className="greeting-note">Let’s make room for clarity.</span>
             </p>
             <AnimatePresence mode="wait">
               <motion.h1
@@ -398,8 +399,8 @@ export default function App() {
               <Flower />
             </span>
             <p>
-              <strong>A fresh start feels good.</strong> You’re exploring{' '}
-              {sample ? 'sample accounts' : 'your workspace'}. Make yourself at home.
+              <strong>A fresh start feels good.</strong> Explore with{' '}
+              {sample ? 'sample accounts' : 'your own accounts'}.
             </p>
             <button className="text-button" onClick={() => setDialog('tour')}>
               Take a quick look
@@ -427,6 +428,7 @@ export default function App() {
             onProperty={setProperty}
             onReminders={() => setDialog('reminders')}
             onTour={() => setDialog('tour')}
+            onDemo={() => setDialog('demo')}
           />
         )}
         {view === 'properties' && (
@@ -434,6 +436,7 @@ export default function App() {
             data={data}
             settings={settings}
             onAdd={() => setDialog('add')}
+            onDemo={() => setDialog('demo')}
             onProperty={setProperty}
           />
         )}
@@ -524,10 +527,14 @@ export default function App() {
             }
           }}
           onTour={() => setDialog('tour')}
+          onDemo={() => setDialog('demo')}
         />
       )}
       {dialog === 'tour' && (
         <Onboarding reduced={reduced} onClose={finishTour} onStart={finishTour} />
+      )}
+      {dialog === 'demo' && (
+        <DemoConnections data={data} onClose={closeDialog} onAddProperty={() => setDialog('add')} />
       )}
       {dialog === 'search' && (
         <Modal

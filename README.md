@@ -29,6 +29,8 @@ The production output is `dist/`. Any HTTPS static host with an SPA fallback can
 - Add properties, import PDF statements up to 15 MB, extract text locally, review figures and save original PDFs. Scanned PDFs support manual entry without OCR. The first 20 pages are inspected for text.
 - Search properties, accounts, screens and statement months with `Ctrl/Cmd K`.
 - Spending charts, category breakdowns, property histories, CSV/JSON exports, original PDF downloads, calendar reminders and downloadable municipal query drafts.
+- Explicitly labelled cloud account and municipal connection demos, including demo consent, simulated sync, response JSON, disconnect and reset.
+- An Anatomy-powered 79-part interactive bill cabinet with truthful category readouts.
 - Official municipal payment links. Personal payment notes are explicitly unverified.
 - Guided onboarding, settings dialog, light/dark/system themes, reduced motion, balance privacy and a clean-slate workspace control.
 - PWA manifest, offline shell and assets, install prompt, update prompt, safe areas, icons, install screenshots and a PDF file handler for supporting installed browsers.
@@ -38,9 +40,9 @@ All direct dependencies were installed from npm's `latest` stable tags on 22 Oct
 
 ## Data and integration boundaries
 
-This release is a functional browser-local MVP. It has **no authentication, backend, cross-device sync, live municipal account retrieval, payment processing or automatic query submission**. It is not a private cloud vault. Initial data is illustrative sample data, dated May–October 2026 and labelled throughout the application. Clear the workspace in Settings before adding your own portfolio.
+This release is a functional browser-local MVP with **explicit demo integrations**. Demo profiles, consent and municipal sync fixtures are simulated on the device. It has **no real cloud authentication, backend, cross-device sync, live municipal account retrieval, payment processing or automatic query submission**. It is not a private cloud vault. Initial data is illustrative sample data, dated May–October 2026 and labelled throughout the application. Clear the workspace in Settings before adding your own portfolio.
 
-Account metadata is in `localStorage` under `billora-workspace`; preferences use `billora-settings`. Original PDFs are in the `billora-documents` IndexedDB database. PDFs and extracted text never leave the device through Billora. Do not upload sensitive documents into shared browser profiles. Clearing site data can remove every record. Export account data and download PDFs before resetting or changing devices. JSON exports contain account data and extracted text, but not binary PDF originals.
+Account metadata is in `localStorage` under `billora-workspace`; preferences use `billora-settings`. Demo profiles and connections use `billora-demo`; reset them separately in the demo dialog. Original PDFs are in the `billora-documents` IndexedDB database. PDFs and extracted text never leave the device through Billora. Do not upload sensitive documents into shared browser profiles. Clearing site data can remove every record. Export account data and download PDFs before resetting or changing devices. JSON exports contain account data and extracted text, but not binary PDF originals.
 
 PDF text extraction does not automatically assert a balance or due date. The user explicitly enters and reviews those figures before saving. Optional category amounts are validated against the total; the remainder is labelled “Other / unallocated”. Insights are based on imported figures and do not confirm billing errors. Reminders are ICS downloads for a calendar application, not background push notifications. Browser PWA and native share/file-handling capabilities vary by browser.
 
@@ -48,8 +50,10 @@ Production municipal integrations require authorised agreements and verified rec
 
 ## Verification
 
-Playwright exercises a complete property → PDF extraction → original download → reminder → payment-note persistence journey. It also checks themes, privacy preferences, onboarding, keyboard search, offline reloads and all four screens at 320, 390, 768, 1024 and 1440 pixels. Axe checks the dashboard and settings against WCAG A/AA rules.
+Playwright exercises a complete property → PDF extraction → original download → reminder → payment-note persistence journey. It also checks themes, privacy preferences, onboarding, keyboard search, offline reloads and all four screens at 320, 390, 768, 1024 and 1440 pixels. Axe checks the dashboard, settings and demo connection dialog against WCAG A/AA rules. Further tests cover demo authorisation/persistence/sync/reset and Anatomy category readouts.
 
 Tests use `/usr/bin/chromium` when present, otherwise Playwright's installed Chromium. On a fresh machine run `npx playwright install chromium`. This is automated Chromium verification; real-device Safari installation and notification behaviour require device testing.
+
+Run `npm run assets` to rebuild brand/install assets and the Anatomy figure from their source files. The logo master is in `public/brand/`; geometry is generated by `scripts/build-cabinet.mjs`.
 
 See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for asset and component attribution. Product research and design notes are in [docs/PRODUCT.md](docs/PRODUCT.md).

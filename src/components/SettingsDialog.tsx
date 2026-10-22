@@ -21,6 +21,7 @@ export function SettingsDialog({
   onExport,
   onClear,
   onTour,
+  onDemo,
   offline,
 }: {
   settings: Settings;
@@ -31,6 +32,7 @@ export function SettingsDialog({
   onExport: () => void;
   onClear: () => Promise<void>;
   onTour: () => void;
+  onDemo: () => void;
   offline: boolean;
 }) {
   const [clear, setClear] = useState(false);
@@ -156,8 +158,20 @@ export function SettingsDialog({
             </button>
           )}
         </div>
+        <section className="demo-entry">
+          <span className="demo-label">DEMO INTEGRATION</span>
+          <h3>A more connected Billora.</h3>
+          <p>
+            Try a demo cloud account and an authorised municipal connection flow. Every sync and
+            balance is simulated on this device.
+          </p>
+          <button className="text-button" onClick={onDemo}>
+            Explore cloud & municipal demo
+            <ArrowUpRightIcon />
+          </button>
+        </section>
         <div className="settings-footer">
-          <img src="/logo.svg" width="24" alt="" />
+          <img src="/logo.png" width="24" alt="" />
           <span>
             Billora<small>A little clarity for everything home.</small>
           </span>

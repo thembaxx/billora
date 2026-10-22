@@ -1,3 +1,6 @@
+# Billora: index the app shell; skip the native import action.
 User-agent: *
 Allow: /
+Disallow: /*?*import=
+
 Sitemap: https://billora-workspace.sillykoala8.chatgpt.site/sitemap.xml
