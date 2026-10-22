@@ -60,11 +60,31 @@ export function demoData(): Workspace {
   );
   return { properties, statements, requests: [] };
 }
+// Keeps illustrative fixtures out of genuine billing and anomaly calculations.
+// Legacy mixed workspaces retain original properties that have real imports or requests.
+export function personalWorkspace(data: Workspace): Workspace {
+  const statements = data.statements.filter((s) => s.source === 'imported');
+  const referenced = new Set([
+    ...statements.map((s) => s.propertyId),
+    ...data.requests.map((r) => r.propertyId),
+  ]);
+  return {
+    properties: data.properties.filter(
+      (p) => !['home', 'rental'].includes(p.id) || referenced.has(p.id),
+    ),
+    statements,
+    requests: data.requests,
+  };
+}
+
 export function readWorkspace(): Workspace {
   try {
     const d = JSON.parse(localStorage.getItem('billora-workspace') || 'null');
     if (d && Array.isArray(d.properties) && Array.isArray(d.statements))
-      return { ...d, requests: Array.isArray(d.requests) ? d.requests : [] };
+      return d.statements.some((s: Statement) => s.source === 'sample') &&
+        d.statements.some((s: Statement) => s.source === 'imported')
+        ? personalWorkspace({ ...d, requests: Array.isArray(d.requests) ? d.requests : [] })
+        : { ...d, requests: Array.isArray(d.requests) ? d.requests : [] };
   } catch {
     /* An unavailable store falls back to sample data. */
   }

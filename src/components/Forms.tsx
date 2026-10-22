@@ -13,6 +13,7 @@ import type { Municipality, Property, Statement, Workspace } from '../types';
 import { deleteDocument, extractPDF, saveDocument } from '../lib/documents';
 import { Modal } from './Modal';
 import { PlaceExplorer } from './PlaceExplorer';
+import { suggestStatementFields, type Suggestions } from '../lib/extract-suggestions';
 
 export function PropertyForm({
   onClose,
@@ -179,6 +180,12 @@ export function ImportForm({
   const [text, setText] = useState('');
   const [notice, setNotice] = useState('');
   const [manual, setManual] = useState(false);
+  const [suggestions, setSuggestions] = useState<Suggestions>({});
+  const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7));
+  const [due, setDue] = useState('');
+  const [amountValue, setAmountValue] = useState('');
+  const [breakdown, setBreakdown] = useState({ electricity: '', water: '', rates: '' });
+  const [categoryReviewed, setCategoryReviewed] = useState(false);
   const [selected, setSelected] = useState(data.properties[0]?.id || '');
   const picker = useRef<HTMLInputElement>(null);
   const once = useRef(false);
@@ -203,6 +210,7 @@ export function ImportForm({
     try {
       const result = await extractPDF(incoming);
       setText(result);
+      setSuggestions(suggestStatementFields(result));
       setNotice(
         result.trim()
           ? 'Text extracted on your device. Check the PDF and enter its figures below.'
@@ -210,6 +218,7 @@ export function ImportForm({
       );
     } catch {
       setText('');
+      setSuggestions({});
       setNotice(
         'We couldn’t extract text from this PDF. You can still save the original and enter its figures below.',
       );
@@ -268,6 +277,7 @@ export function ImportForm({
       fileName: file?.name,
       extractedText: text,
       confidence: file ? 'reviewed' : 'manual',
+      categoryReviewed,
     };
     if (
       data.statements.some(
@@ -304,11 +314,14 @@ export function ImportForm({
       onClose={onClose}
       wide
     >
-      {!data.properties.length ? (
+      {!data.properties.length || data.statements.some((s) => s.source === 'sample') ? (
         <div className="empty-state">
           <FilePdfIcon size={48} />
-          <h3>First, a place for your statement.</h3>
-          <p>Add a property so we know where this account belongs.</p>
+          <h3>First, add your own property.</h3>
+          <p>
+            Illustrative sample properties are for exploring. Start your personal workspace before
+            importing a real bill.
+          </p>
           <button className="button primary" onClick={onAddProperty}>
             Add a property
             <ArrowRightIcon />
@@ -374,6 +387,46 @@ export function ImportForm({
               {notice}
             </p>
           )}
+          {Object.keys(suggestions).length > 0 && (
+            <section className="note-box suggestion-review" aria-label="Suggested PDF fields">
+              <div>
+                <strong>Possible figures from your PDF</strong>
+                <p>
+                  Suggestions may be wrong. Compare each quoted passage with the original PDF before
+                  saving.
+                </p>
+                <ul>
+                  {Object.entries(suggestions).map(([field, suggestion]) => (
+                    <li key={field}>
+                      <strong>
+                        {field}: {suggestion.value}
+                      </strong>
+                      <small>Found: “{suggestion.evidence}”</small>
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  type="button"
+                  className="button secondary small"
+                  onClick={() => {
+                    if (suggestions.period) setPeriod(suggestions.period.value);
+                    if (suggestions.due) setDue(suggestions.due.value);
+                    if (suggestions.amount) setAmountValue(suggestions.amount.value);
+                    const keys = ['electricity', 'water', 'rates'] as const;
+                    setBreakdown((current) => {
+                      const next = { ...current };
+                      for (const key of keys)
+                        if (suggestions[key]) next[key] = suggestions[key].value;
+                      return next;
+                    });
+                    if (keys.some((key) => !!suggestions[key])) setCategoryReviewed(true);
+                  }}
+                >
+                  Apply suggestions for review
+                </button>
+              </div>
+            </section>
+          )}
           <label>
             Property
             <select value={selected} onChange={(e) => setSelected(e.target.value)}>
@@ -391,14 +444,23 @@ export function ImportForm({
                 name="period"
                 type="month"
                 required
-                defaultValue={new Date().toISOString().slice(0, 7)}
+                value={period}
+                onChange={(e) => setPeriod(e.target.value)}
                 min="2000-01"
                 max="2100-12"
               />
             </label>
             <label>
               Payment due date
-              <input name="due" type="date" required min="2000-01-01" max="2100-12-31" />
+              <input
+                name="due"
+                type="date"
+                required
+                min="2000-01-01"
+                max="2100-12-31"
+                value={due}
+                onChange={(e) => setDue(e.target.value)}
+              />
             </label>
           </div>
           <label>
@@ -406,6 +468,8 @@ export function ImportForm({
             <input
               name="amount"
               type="number"
+              value={amountValue}
+              onChange={(e) => setAmountValue(e.target.value)}
               min="0"
               max="100000000"
               step="0.01"
@@ -423,7 +487,18 @@ export function ImportForm({
               {['electricity', 'water', 'rates'].map((c) => (
                 <label key={c}>
                   {c[0].toUpperCase() + c.slice(1)} (R)
-                  <input name={c} type="number" min="0" step="0.01" placeholder="0.00" />
+                  <input
+                    name={c}
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={breakdown[c as keyof typeof breakdown]}
+                    onChange={(e) => {
+                      setCategoryReviewed(true);
+                      setBreakdown((prev) => ({ ...prev, [c]: e.target.value }));
+                    }}
+                  />
                 </label>
               ))}
             </div>

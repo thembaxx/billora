@@ -20,6 +20,8 @@ import { SpendingChart } from './SpendingChart';
 import { AccountCabinet } from './AccountCabinet';
 import { RequestEntry } from './requests/RequestEntry';
 import { PlaceExplorer } from './PlaceExplorer';
+import { BillReview } from './BillReview';
+import type { BillChange } from '../lib/insights';
 
 export function Properties({
   data,
@@ -328,7 +330,17 @@ export function Statements({
   );
 }
 
-export function Insights({ data, settings }: { data: Workspace; settings: Settings }) {
+export function Insights({
+  data,
+  settings,
+  onStatement,
+  onRequest,
+}: {
+  data: Workspace;
+  settings: Settings;
+  onStatement: (s: Statement) => void;
+  onRequest: (change: BillChange) => void;
+}) {
   const latest = latestStatements(data);
   const sum = latest.reduce((a, s) => a + s.amount, 0);
   const categories = [
@@ -355,12 +367,13 @@ export function Insights({ data, settings }: { data: Workspace; settings: Settin
   return (
     <>
       <SpendingChart data={data} hidden={settings.hideBalances} expanded />
+      <BillReview data={data} settings={settings} onStatement={onStatement} onRequest={onRequest} />
       <div className="insights-grid">
         <section className="card category-card">
           <div className="card-heading">
             <div>
               <h2>Where it all goes</h2>
-              <p>Your latest imported account breakdown.</p>
+              <p>Latest saved account breakdown (sample data is illustrative).</p>
             </div>
             <SparkleIcon size={24} />
           </div>

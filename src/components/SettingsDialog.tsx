@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState, type ChangeEvent } from 'react';
 import {
   ArrowDownIcon,
   ArrowUpRightIcon,
@@ -19,6 +19,10 @@ export function SettingsDialog({
   onInstall,
   installAvailable,
   onExport,
+  onBackup,
+  onRestore,
+  onPersonal,
+  sampleWorkspace,
   onClear,
   onTour,
   onDemo,
@@ -31,6 +35,10 @@ export function SettingsDialog({
   onInstall: () => void;
   installAvailable: boolean;
   onExport: () => void;
+  onBackup: () => Promise<void>;
+  onRestore: (file: File) => Promise<void>;
+  onPersonal: () => void;
+  sampleWorkspace: boolean;
   onClear: () => Promise<void>;
   onTour: () => void;
   onDemo: () => void;
@@ -39,6 +47,10 @@ export function SettingsDialog({
 }) {
   const [clear, setClear] = useState(false);
   const [name, setName] = useState(settings.name);
+  const [restoreFile, setRestoreFile] = useState<File | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const selectRestore = (e: ChangeEvent<HTMLInputElement>) =>
+    setRestoreFile(e.target.files?.[0] || null);
   return (
     <Modal
       title="Make Billora yours."
@@ -128,11 +140,52 @@ export function SettingsDialog({
             <ShieldCheckIcon size={17} />
             Your data and original PDFs are stored in this browser on this device. There is no cloud
             sync or account login. Service requests, notes and evidence are also local. Export
-            records and keep copies of your PDFs before clearing browser data.
+            records and keep copies of your PDFs before clearing browser data. Downloads are not
+            encrypted.
           </p>
+          {sampleWorkspace && (
+            <button className="settings-action" onClick={onPersonal}>
+              <ArrowUpRightIcon />
+              Start an empty personal workspace
+            </button>
+          )}
+          <button className="settings-action" onClick={() => void onBackup()}>
+            <ArrowDownIcon />
+            Full backup (ZIP including files)
+            <ArrowUpRightIcon />
+          </button>
+          <input
+            ref={fileInput}
+            type="file"
+            accept=".zip,application/zip"
+            className="sr-only"
+            aria-label="Choose a Billora full backup"
+            onChange={selectRestore}
+          />
+          <button className="settings-action" onClick={() => fileInput.current?.click()}>
+            <ArrowUpRightIcon />
+            Restore full backup (ZIP)
+          </button>
+          {restoreFile && (
+            <div className="delete-section">
+              <p>
+                Restore {restoreFile.name}? This replaces your current workspace, original PDFs,
+                requests and evidence. Download a backup first. ZIP files are not encrypted.
+                Preferences and demo connections are not restored.
+              </p>
+              <div>
+                <button className="button secondary" onClick={() => setRestoreFile(null)}>
+                  Cancel restore
+                </button>
+                <button className="button danger" onClick={() => void onRestore(restoreFile)}>
+                  Confirm restore
+                </button>
+              </div>
+            </div>
+          )}
           <button className="settings-action" onClick={onExport}>
             <ArrowDownIcon />
-            Export account data (JSON)
+            Export account data (JSON, no PDFs)
             <ArrowUpRightIcon />
           </button>
           <button className="settings-action" onClick={onTour}>

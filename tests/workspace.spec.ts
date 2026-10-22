@@ -271,9 +271,7 @@ test('legal documents have direct URLs, follow the theme and remain available of
     const response = await page.request.get(path);
     expect(response.ok(), path).toBe(true);
     const html = await response.text();
-    expect(html).toContain(
-      `rel="canonical" href="https://billora-workspace.sillykoala8.chatgpt.site${path}"`,
-    );
+    expect(html).toContain(`rel="canonical" href="https://billora.themba.dev${path}"`);
     expect(html).toContain('<h1>');
     expect(html).not.toContain('<div id="root">');
   }

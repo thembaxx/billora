@@ -29,6 +29,7 @@ import {
   latestStatements,
   money,
   readWorkspace,
+  personalWorkspace,
 } from './lib/data';
 import { clearDocuments, deleteDocument } from './lib/documents';
 import { AnimatedTabs } from './components/AnimatedTabs';
@@ -44,6 +45,8 @@ import { DemoConnections } from './components/DemoConnections';
 import { RequestWorkspace } from './components/requests/RequestWorkspace';
 import { followUpDue, newRequest, type RequestMutation } from './lib/requests';
 import { clearRequestFiles, deleteRequestFile } from './lib/request-files';
+import { createFullBackup, restoreFullBackup } from './lib/backup';
+import type { BillChange } from './lib/insights';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 const nav = [
@@ -262,8 +265,31 @@ export default function App() {
       return false;
     }
   };
-  const createRequest = (p: Property, statement?: Statement): ServiceRequest | null => {
+  const createRequest = (
+    p: Property,
+    statement?: Statement,
+    change?: BillChange,
+  ): ServiceRequest | null => {
     const request = newRequest(p, statement);
+    if (change) {
+      request.description =
+        'Please review the change in ' +
+        change.label.toLowerCase() +
+        ' between ' +
+        change.previous.period +
+        ' (' +
+        money(change.before) +
+        ') and ' +
+        change.current.period +
+        ' (' +
+        money(change.after) +
+        '). The difference is ' +
+        money(change.difference) +
+        '. These figures come from my reviewed imported statements; ' +
+        'I am asking for clarification, not asserting a billing error.';
+      request.desiredOutcome =
+        'Please explain the charges and confirm the applicable readings and tariffs.';
+    }
     const current = dataRef.current;
     return update({ ...current, requests: [...current.requests, request] }) ? request : null;
   };
@@ -283,8 +309,8 @@ export default function App() {
     setStatementId(null);
     setDialog('requests');
   };
-  const startRequest = (p: Property, statement?: Statement) => {
-    const request = createRequest(p, statement);
+  const startRequest = (p: Property, statement?: Statement, change?: BillChange) => {
+    const request = createRequest(p, statement, change);
     if (request) openRequests({ id: request.id, edit: true });
   };
   const updateSettings = (next: Settings) => {
@@ -467,6 +493,26 @@ export default function App() {
             </button>
           </div>
         )}
+        {view === 'overview' && data.statements.some((s) => s.source === 'sample') && (
+          <div className="info-banner sample-separation">
+            <div>
+              <strong>Exploring with illustrative accounts.</strong>
+              <p>
+                These are not your municipal balances. Start a personal workspace before importing
+                real bills.
+              </p>
+              <button
+                className="button secondary small"
+                onClick={() => {
+                  if (update(personalWorkspace(data)))
+                    notify('Personal workspace ready. Add your own property to begin.');
+                }}
+              >
+                Start my workspace <ArrowUpRightIcon size={16} />
+              </button>
+            </div>
+          </div>
+        )}
         {view === 'overview' && (
           <Overview
             data={data}
@@ -499,13 +545,24 @@ export default function App() {
             onStatement={showStatement}
           />
         )}
-        {view === 'insights' && <Insights data={data} settings={settings} />}
+        {view === 'insights' && (
+          <Insights
+            data={data}
+            settings={settings}
+            onStatement={showStatement}
+            onRequest={(change) => {
+              const p = data.properties.find((item) => item.id === change.propertyId);
+              if (p) startRequest(p, change.current, change);
+            }}
+          />
+        )}
       </main>
       {dialog === 'add' && (
         <PropertyForm
           onClose={closeDialog}
           onSave={(p) => {
-            const ok = update({ ...data, properties: [...data.properties, p] });
+            const personal = personalWorkspace(data);
+            const ok = update({ ...personal, properties: [...personal.properties, p] });
             if (ok) notify('A new place, nicely organised. Property added.');
             return ok;
           }}
@@ -554,6 +611,33 @@ export default function App() {
               setInstall(null);
             })();
           }}
+          sampleWorkspace={data.statements.some((s) => s.source === 'sample')}
+          onPersonal={() => {
+            if (update(personalWorkspace(data))) {
+              setDialog(null);
+              notify('Your personal workspace is ready. Sample bills are no longer included.');
+            }
+          }}
+          onBackup={async () => {
+            try {
+              const blob = await createFullBackup(data);
+              download(blob, 'billora-complete-backup.zip', 'application/zip');
+              notify('Complete ZIP backup downloaded. Keep this unencrypted file secure.');
+            } catch (error) {
+              notify(error instanceof Error ? error.message : 'Could not create full backup.');
+            }
+          }}
+          onRestore={async (file) => {
+            try {
+              const restored = await restoreFullBackup(file, dataRef.current);
+              dataRef.current = restored;
+              setData(restored);
+              navigate('overview');
+              notify('Full workspace restored from your local ZIP.');
+            } catch (error) {
+              notify(error instanceof Error ? error.message : 'Could not restore ZIP backup.');
+            }
+          }}
           onExport={() => {
             download(
               JSON.stringify(
@@ -565,7 +649,7 @@ export default function App() {
               'application/json',
             );
             notify(
-              'Account records exported. Download original PDFs and request ZIPs separately for file copies.',
+              'Records-only JSON exported. Use Full backup (ZIP) to include original PDFs and evidence.',
             );
           }}
           onClear={async () => {

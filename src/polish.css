@@ -2059,3 +2059,71 @@ html[data-theme='dark'] .demo-disclosure {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+/* Contextual bill intelligence: reuse existing quiet paper surfaces and controls. */
+.bill-review {
+  margin-block: 1.5rem;
+}
+.bill-review-list {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+.bill-review-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 1.2rem;
+  padding: 1rem;
+  border: 1px solid var(--border, #e8e6e3);
+  border-radius: 16px;
+}
+.bill-review-row.notable {
+  border-color: #efb18e;
+}
+.bill-review-row > div:first-child {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+.bill-review-row small {
+  display: block;
+  color: var(--muted, #777);
+}
+.bill-review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
+  gap: 0.5rem;
+  text-align: right;
+}
+.bill-review-actions > strong {
+  width: 100%;
+}
+.suggestion-review ul {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+  margin-block: 0.75rem;
+}
+.suggestion-review li {
+  display: grid;
+  gap: 0.15rem;
+  overflow-wrap: anywhere;
+}
+.suggestion-review li small {
+  opacity: 0.75;
+}
+.sample-separation {
+  margin-bottom: 1rem;
+}
+@media (max-width: 560px) {
+  .bill-review-row {
+    flex-direction: column;
+  }
+  .bill-review-actions {
+    justify-content: start;
+    text-align: left;
+  }
+}

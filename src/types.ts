@@ -27,6 +27,7 @@ export interface Statement {
   fileId?: string;
   extractedText?: string;
   confidence?: 'reviewed' | 'manual';
+  categoryReviewed?: boolean;
   paidNote?: boolean;
 }
 export interface Workspace {
