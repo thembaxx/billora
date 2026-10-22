@@ -27,3 +27,11 @@ Cloud profiles and authorised municipal connector flows are local demonstrations
 ## Next integration milestone
 
 Validate whether consumers return to import a second statement. Then investigate authorised bill presentment with municipal providers and payment networks. Public municipal finance datasets must never be represented as private household balances. A future server implementation needs verified identities, property permissions, encrypted document storage and an explicit document-retention policy.
+
+## Smart bill review (October 2026)
+
+- Personal imported statements are separated from sample data; only reviewed imports power comparisons.
+- Local PDF patterns suggest selected fields with quoted source text, requiring user application, review and confirmation.
+- Total comparisons require consecutive months; category comparisons require reviewed breakdowns for both months. Notable increases use numerical thresholds and are not determinations of billing errors.
+- Alerts link to both statements and prefill an unsent service-request draft for review.
+- Full ZIP backup and replacement restore include PDF originals and request evidence, excluding preferences and demo profile state. ZIPs are unencrypted with a 120 MB limit; no cloud copy exists.

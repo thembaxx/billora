@@ -3,4 +3,4 @@ User-agent: *
 Allow: /
 Disallow: /*?*import=
 
-Sitemap: https://billora-workspace.sillykoala8.chatgpt.site/sitemap.xml
+Sitemap: https://billora.themba.dev/sitemap.xml
