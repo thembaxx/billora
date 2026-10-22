@@ -73,6 +73,27 @@ function validate(raw: unknown, files: Record<string, Uint8Array>): Archive {
     archive.workspace.requests.length > 100000
   )
     throw new Error('Backup record count exceeds safety limits.');
+  if (
+    archive.workspace.properties.some(
+      (p) => !p || typeof p.id !== 'string' || typeof p.name !== 'string' ||
+        typeof p.address !== 'string' || typeof p.municipality !== 'string',
+    ) ||
+    archive.workspace.statements.some(
+      (statement) => !statement || typeof statement.id !== 'string' ||
+        typeof statement.propertyId !== 'string' || typeof statement.period !== 'string' ||
+        typeof statement.dueDate !== 'string' ||
+        !Number.isFinite(statement.amount) || !statement.categories ||
+        ['electricity', 'water', 'rates', 'services'].some(
+          (key) => !Number.isFinite(statement.categories[key as keyof typeof statement.categories]),
+        ),
+    ) ||
+    archive.workspace.requests.some(
+      (request) => !request || typeof request.id !== 'string' ||
+        typeof request.propertyId !== 'string' || !request.property ||
+        !Array.isArray(request.evidence) || !Array.isArray(request.events) ||
+        request.evidence.some((item) => !item || typeof item.id !== 'string'),
+    )
+  ) throw new Error('Backup contains invalid workspace records.');
   const expected = ids(archive.workspace);
   for (const [kind, refs] of [
     ['originals', archive.originals],
@@ -99,7 +120,18 @@ export async function restoreFullBackup(file: File, current: Workspace): Promise
   if (!/\.zip$/i.test(file.name) || file.size > limit)
     throw new Error('Choose a Billora ZIP under 120 MB.');
   const bytes = new Uint8Array(await file.arrayBuffer());
-  const files = unzipSync(bytes, { filter: (entry) => entry.originalSize <= limit });
+  let totalSize = 0;
+  let entryCount = 0;
+  const files = unzipSync(bytes, {
+    filter: (entry) => {
+      entryCount++;
+      totalSize += entry.originalSize;
+      if (entryCount > 1000 || entry.originalSize > limit || totalSize > limit) {
+        throw new Error('Backup exceeds safe extraction limits.');
+      }
+      return true;
+    },
+  });
   if (Object.values(files).reduce((n, part) => n + part.length, 0) > limit)
     throw new Error('Decompressed backup exceeds 120 MB.');
   if (!files['billora-backup.json']) throw new Error('Not a Billora full backup.');
