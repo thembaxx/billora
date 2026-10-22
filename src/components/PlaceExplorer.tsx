@@ -117,6 +117,7 @@ export function PlaceExplorer({
           return;
         }
         setDevice(point);
+        setSelected(null);
         setCenter(point);
         setZoom(coords.accuracy > 500 ? 13 : 16);
         // Device coordinates are never stored until the user explicitly selects a pin.
