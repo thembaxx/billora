@@ -105,7 +105,7 @@ test('current location only activates after permission action and is not stored 
   const stored = await page.evaluate(() =>
     JSON.parse(localStorage.getItem('billora-workspace') || '{}'),
   );
-  expect(stored.properties.every((p: { location?: unknown }) => !p.location)).toBeTruthy();
+  expect((stored.properties || []).every((p: { location?: unknown }) => !p.location)).toBeTruthy();
 });
 
 test('map stays accessible at mobile sizes and offers a truthful offline fallback', async ({
@@ -121,6 +121,7 @@ test('map stays accessible at mobile sizes and offers a truthful offline fallbac
   await page.keyboard.press('Enter');
   await expect(page.getByText('Your selected place')).toBeVisible();
   const accessibility = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
+  console.log('Location axe findings', JSON.stringify(accessibility.violations.map((v) => ({ id: v.id, nodes: v.nodes.map((n) => ({ target: n.target, summary: n.failureSummary })) }))));
   expect(accessibility.violations.map((v) => v.id)).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await context.setOffline(true);
