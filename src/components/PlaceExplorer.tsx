@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 import {
@@ -61,8 +61,7 @@ export function PlaceExplorer({
     });
   }, { scope });
 
-  async function find(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function find() {
     if (!online || searching) {
       setError('Place search needs an internet connection.');
       return;
@@ -146,7 +145,7 @@ export function PlaceExplorer({
         <GeoCompass reduced={reduced} />
       </div>
       <div className="geo-search-panel geo-enter">
-        <form className="geo-search" onSubmit={(event) => void find(event)}>
+        <div className="geo-search" role="search">
           <MagnifyingGlassIcon size={20} aria-hidden="true" />
           <input
             aria-label="Find a place in South Africa"
@@ -155,12 +154,15 @@ export function PlaceExplorer({
             placeholder="Town, street or landmark…"
             maxLength={140}
             type="search"
+            onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => {
+              if (event.key === 'Enter') { event.preventDefault(); void find(); }
+            }}
           />
-          <button className="button primary small" disabled={searching || !online || query.trim().length < 3} type="submit">
+          <button className="button primary small" disabled={searching || !online || query.trim().length < 3} type="button" onClick={() => void find()}>
             {searching ? 'Finding…' : 'Find'}
             <ArrowRightIcon size={16} aria-hidden="true" />
           </button>
-        </form>
+        </div>
         <button
           className="button secondary geo-locate"
           type="button"
