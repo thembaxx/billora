@@ -69,7 +69,9 @@ export function personalWorkspace(data: Workspace): Workspace {
     ...data.requests.map((r) => r.propertyId),
   ]);
   return {
-    properties: data.properties.filter((p) => !['home', 'rental'].includes(p.id) || referenced.has(p.id)),
+    properties: data.properties.filter(
+      (p) => !['home', 'rental'].includes(p.id) || referenced.has(p.id),
+    ),
     statements,
     requests: data.requests,
   };

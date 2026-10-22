@@ -34,8 +34,13 @@ export function billChanges(data: Workspace): BillChange[] {
       .sort((a, b) => b.period.localeCompare(a.period) || b.importedAt.localeCompare(a.importedAt));
     const current = history[0];
     const previous = history[1];
-    if (!current || !previous || monthNumber(current.period) === null ||
-        monthNumber(previous.period) !== monthNumber(current.period)! - 1) return [];
+    if (
+      !current ||
+      !previous ||
+      monthNumber(current.period) === null ||
+      monthNumber(previous.period) !== monthNumber(current.period)! - 1
+    )
+      return [];
 
     const categories: Array<Category | 'total'> = ['total'];
     if (current.categoryReviewed && previous.categoryReviewed) {
@@ -47,20 +52,23 @@ export function billChanges(data: Workspace): BillChange[] {
       if (!Number.isFinite(before) || !Number.isFinite(after) || before < 0 || after < 0) return [];
       const difference = Math.round((after - before) * 100) / 100;
       const percent = before > 0 ? (difference / before) * 100 : null;
-      return [{
-        propertyId: property.id,
-        propertyName: property.name,
-        current,
-        previous,
-        category,
-        label: category === 'total' ? 'Total bill' : billCategories[category],
-        before,
-        after,
-        difference,
-        percent,
-        notable: difference >= (category === 'total' ? 250 : 100) &&
-          (percent === null ? false : percent >= 30),
-      }];
+      return [
+        {
+          propertyId: property.id,
+          propertyName: property.name,
+          current,
+          previous,
+          category,
+          label: category === 'total' ? 'Total bill' : billCategories[category],
+          before,
+          after,
+          difference,
+          percent,
+          notable:
+            difference >= (category === 'total' ? 250 : 100) &&
+            (percent === null ? false : percent >= 30),
+        },
+      ];
     });
   });
 }

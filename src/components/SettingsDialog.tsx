@@ -49,7 +49,8 @@ export function SettingsDialog({
   const [name, setName] = useState(settings.name);
   const [restoreFile, setRestoreFile] = useState<File | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
-  const selectRestore = (e: ChangeEvent<HTMLInputElement>) => setRestoreFile(e.target.files?.[0] || null);
+  const selectRestore = (e: ChangeEvent<HTMLInputElement>) =>
+    setRestoreFile(e.target.files?.[0] || null);
   return (
     <Modal
       title="Make Billora yours."
@@ -139,7 +140,8 @@ export function SettingsDialog({
             <ShieldCheckIcon size={17} />
             Your data and original PDFs are stored in this browser on this device. There is no cloud
             sync or account login. Service requests, notes and evidence are also local. Export
-            records and keep copies of your PDFs before clearing browser data. Downloads are not encrypted.
+            records and keep copies of your PDFs before clearing browser data. Downloads are not
+            encrypted.
           </p>
           {sampleWorkspace && (
             <button className="settings-action" onClick={onPersonal}>

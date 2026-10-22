@@ -270,11 +270,14 @@ export function ImportForm({
       onClose={onClose}
       wide
     >
-      {(!data.properties.length || data.statements.some((s) => s.source === 'sample')) ? (
+      {!data.properties.length || data.statements.some((s) => s.source === 'sample') ? (
         <div className="empty-state">
           <FilePdfIcon size={48} />
           <h3>First, add your own property.</h3>
-          <p>Illustrative sample properties are for exploring. Start your personal workspace before importing a real bill.</p>
+          <p>
+            Illustrative sample properties are for exploring. Start your personal workspace before
+            importing a real bill.
+          </p>
           <button className="button primary" onClick={onAddProperty}>
             Add a property
             <ArrowRightIcon />
@@ -344,11 +347,16 @@ export function ImportForm({
             <section className="note-box suggestion-review" aria-label="Suggested PDF fields">
               <div>
                 <strong>Possible figures from your PDF</strong>
-                <p>Suggestions may be wrong. Compare each quoted passage with the original PDF before saving.</p>
+                <p>
+                  Suggestions may be wrong. Compare each quoted passage with the original PDF before
+                  saving.
+                </p>
                 <ul>
                   {Object.entries(suggestions).map(([field, suggestion]) => (
                     <li key={field}>
-                      <strong>{field}: {suggestion.value}</strong>
+                      <strong>
+                        {field}: {suggestion.value}
+                      </strong>
                       <small>Found: “{suggestion.evidence}”</small>
                     </li>
                   ))}
@@ -363,7 +371,8 @@ export function ImportForm({
                     const keys = ['electricity', 'water', 'rates'] as const;
                     setBreakdown((current) => {
                       const next = { ...current };
-                      for (const key of keys) if (suggestions[key]) next[key] = suggestions[key].value;
+                      for (const key of keys)
+                        if (suggestions[key]) next[key] = suggestions[key].value;
                       return next;
                     });
                     if (keys.some((key) => !!suggestions[key])) setCategoryReviewed(true);
@@ -399,7 +408,15 @@ export function ImportForm({
             </label>
             <label>
               Payment due date
-              <input name="due" type="date" required min="2000-01-01" max="2100-12-31" value={due} onChange={(e) => setDue(e.target.value)} />
+              <input
+                name="due"
+                type="date"
+                required
+                min="2000-01-01"
+                max="2100-12-31"
+                value={due}
+                onChange={(e) => setDue(e.target.value)}
+              />
             </label>
           </div>
           <label>

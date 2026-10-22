@@ -265,15 +265,30 @@ export default function App() {
       return false;
     }
   };
-  const createRequest = (p: Property, statement?: Statement, change?: BillChange): ServiceRequest | null => {
+  const createRequest = (
+    p: Property,
+    statement?: Statement,
+    change?: BillChange,
+  ): ServiceRequest | null => {
     const request = newRequest(p, statement);
     if (change) {
-      request.description = 'Please review the change in ' + change.label.toLowerCase() +
-        ' between ' + change.previous.period + ' (' + money(change.before) + ') and ' +
-        change.current.period + ' (' + money(change.after) + '). The difference is ' +
-        money(change.difference) + '. These figures come from my reviewed imported statements; ' +
+      request.description =
+        'Please review the change in ' +
+        change.label.toLowerCase() +
+        ' between ' +
+        change.previous.period +
+        ' (' +
+        money(change.before) +
+        ') and ' +
+        change.current.period +
+        ' (' +
+        money(change.after) +
+        '). The difference is ' +
+        money(change.difference) +
+        '. These figures come from my reviewed imported statements; ' +
         'I am asking for clarification, not asserting a billing error.';
-      request.desiredOutcome = 'Please explain the charges and confirm the applicable readings and tariffs.';
+      request.desiredOutcome =
+        'Please explain the charges and confirm the applicable readings and tariffs.';
     }
     const current = dataRef.current;
     return update({ ...current, requests: [...current.requests, request] }) ? request : null;
@@ -482,10 +497,17 @@ export default function App() {
           <div className="info-banner sample-separation">
             <div>
               <strong>Exploring with illustrative accounts.</strong>
-              <p>These are not your municipal balances. Start a personal workspace before importing real bills.</p>
-              <button className="button secondary small" onClick={() => {
-                if (update(personalWorkspace(data))) notify('Personal workspace ready. Add your own property to begin.');
-              }}>
+              <p>
+                These are not your municipal balances. Start a personal workspace before importing
+                real bills.
+              </p>
+              <button
+                className="button secondary small"
+                onClick={() => {
+                  if (update(personalWorkspace(data)))
+                    notify('Personal workspace ready. Add your own property to begin.');
+                }}
+              >
                 Start my workspace <ArrowUpRightIcon size={16} />
               </button>
             </div>

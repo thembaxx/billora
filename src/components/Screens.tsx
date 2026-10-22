@@ -307,7 +307,12 @@ export function Statements({
   );
 }
 
-export function Insights({ data, settings, onStatement, onRequest }: {
+export function Insights({
+  data,
+  settings,
+  onStatement,
+  onRequest,
+}: {
   data: Workspace;
   settings: Settings;
   onStatement: (s: Statement) => void;

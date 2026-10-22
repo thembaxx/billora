@@ -16,7 +16,7 @@ export function BillReview({
 }) {
   const changes = billChanges(data);
   const alerts = changes.filter((change) => change.notable);
-  const privacy = (value: number) => settings.hideBalances ? 'R •••••' : money(value);
+  const privacy = (value: number) => (settings.hideBalances ? 'R •••••' : money(value));
   return (
     <section className="card bill-review" aria-labelledby="bill-review-title">
       <div className="card-heading">
@@ -49,21 +49,26 @@ export function BillReview({
                 <div>
                   <strong>{change.label}</strong>
                   <small>
-                    {change.propertyName} · {dateLabel(change.previous.period + '-01', { month: 'short', year: 'numeric' })}
+                    {change.propertyName} ·{' '}
+                    {dateLabel(change.previous.period + '-01', { month: 'short', year: 'numeric' })}
                     {' → '}
                     {dateLabel(change.current.period + '-01', { month: 'short', year: 'numeric' })}
                   </small>
                   <small>
                     {privacy(change.before)} → {privacy(change.after)}
-                    {change.percent === null ? ' · Previous amount was zero' :
-                      ' · ' + Math.abs(change.percent).toFixed(1) + '% ' +
+                    {change.percent === null
+                      ? ' · Previous amount was zero'
+                      : ' · ' +
+                        Math.abs(change.percent).toFixed(1) +
+                        '% ' +
                         (change.difference >= 0 ? 'increase' : 'decrease')}
                   </small>
                 </div>
                 <div className="bill-review-actions">
                   <strong className="numeric">
-                    {settings.hideBalances ? 'R •••••' :
-                      (change.difference >= 0 ? '+' : '−') + money(Math.abs(change.difference))}
+                    {settings.hideBalances
+                      ? 'R •••••'
+                      : (change.difference >= 0 ? '+' : '−') + money(Math.abs(change.difference))}
                   </strong>
                   <button className="text-button" onClick={() => onStatement(change.previous)}>
                     Previous bill <ArrowUpRightIcon size={15} />
@@ -81,9 +86,9 @@ export function BillReview({
             ))}
           </div>
           <p className="small-note">
-            Flags require a rise of at least 30% and R100 for a reviewed category
-            (R250 for the total). They cannot establish faulty readings, tariff errors or debt.
-            Unreviewed category allocations are excluded.
+            Flags require a rise of at least 30% and R100 for a reviewed category (R250 for the
+            total). They cannot establish faulty readings, tariff errors or debt. Unreviewed
+            category allocations are excluded.
           </p>
         </>
       )}
