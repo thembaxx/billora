@@ -35,3 +35,12 @@ Validate whether consumers return to import a second statement. Then investigate
 - Total comparisons require consecutive months; category comparisons require reviewed breakdowns for both months. Notable increases use numerical thresholds and are not determinations of billing errors.
 - Alerts link to both statements and prefill an unsent service-request draft for review.
 - Full ZIP backup and replacement restore include PDF originals and request evidence, excluding preferences and demo profile state. ZIPs are unencrypted with a 120 MB limit; no cloud copy exists.
+
+## Location explorer and map (October 2026)
+
+- A dedicated Properties card/map view and optional map-assisted property creation preserve the four-tab navigation.
+- The browser requests only visible OpenStreetMap tiles; no background tile downloads, prefetching, service-worker pre-caching, or offline map promises.
+- Search requires the user's explicit submit action and queries Nominatim with South African results. No autocomplete. The public Nominatim server has strict rate limits, no SLA, and is unsuitable for significant scale; use a properly identified hosted provider or own service before commercial rollout.
+- Geolocation permission is requested exclusively by an explicit button. Browser device coordinates remain ephemeral, whereas a user-confirmed property map pin is saved to local workspace metadata. Saving pinned coordinates does not verify municipal property identity or ownership.
+- The WebGL compass is decorative, uses existing Three.js, and respects reduced motion and visibility. Fallback remains functional with WebGL unavailable.
+- The map is an online enhancement. The rest of the local PWA, manual address form and property lists remain usable without map data.

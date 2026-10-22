@@ -8,6 +8,7 @@ import {
   FileTextIcon,
   FunnelSimpleIcon,
   MagnifyingGlassIcon,
+  MapTrifoldIcon,
   PlusIcon,
   SparkleIcon,
   UploadSimpleIcon,
@@ -18,6 +19,7 @@ import { PropertyCard } from './PropertyCard';
 import { SpendingChart } from './SpendingChart';
 import { AccountCabinet } from './AccountCabinet';
 import { RequestEntry } from './requests/RequestEntry';
+import { PlaceExplorer } from './PlaceExplorer';
 import { BillReview } from './BillReview';
 import type { BillChange } from '../lib/insights';
 
@@ -37,12 +39,22 @@ export function Properties({
   onRequests: () => void;
 }) {
   const [filter, setFilter] = useState('All properties');
+  const [mapView, setMapView] = useState(false);
   const latest = latestStatements(data);
   const rows = data.properties.filter((p) => filter === 'All properties' || p.kind === filter);
   return (
     <>
       <div className="screen-toolbar">
         <span className="count-label">{data.properties.length} places. One workspace.</span>
+        <button
+          className="button secondary small"
+          type="button"
+          aria-pressed={mapView}
+          onClick={() => setMapView((value) => !value)}
+        >
+          <MapTrifoldIcon size={18} />
+          {mapView ? 'Cards view' : 'Explore map'}
+        </button>
         <label className="select-control">
           <FunnelSimpleIcon />
           <select
@@ -56,33 +68,44 @@ export function Properties({
           </select>
         </label>
       </div>
-      <div className="property-grid">
-        {rows.map((p) => (
-          <PropertyCard
-            large
-            key={p.id}
-            property={p}
-            statement={latest.find((s) => s.propertyId === p.id)}
-            hidden={settings.hideBalances}
-            onClick={() => onProperty(p)}
-          />
-        ))}
-        <button className="add-property-tile" onClick={onAdd}>
-          <span>
-            <PlusIcon size={26} />
-          </span>
-          <h2>Room for one more.</h2>
-          <p>
-            Add a home, rental or business property.
-            <br />
-            Make the whole picture a little clearer.
+      {mapView && (
+        <section className="card geo-properties-panel">
+          <PlaceExplorer properties={rows} onProperty={onProperty} />
+          <p className="small-note">
+            Only properties with a saved map pin appear as markers. Sample addresses have not been
+            geocoded, and Billora never sends your saved addresses to search automatically.
           </p>
-          <span className="text-button">
-            Add a property
-            <ArrowUpRightIcon />
-          </span>
-        </button>
-      </div>
+        </section>
+      )}
+      {!mapView && (
+        <div className="property-grid">
+          {rows.map((p) => (
+            <PropertyCard
+              large
+              key={p.id}
+              property={p}
+              statement={latest.find((s) => s.propertyId === p.id)}
+              hidden={settings.hideBalances}
+              onClick={() => onProperty(p)}
+            />
+          ))}
+          <button className="add-property-tile" onClick={onAdd}>
+            <span>
+              <PlusIcon size={26} />
+            </span>
+            <h2>Room for one more.</h2>
+            <p>
+              Add a home, rental or business property.
+              <br />
+              Make the whole picture a little clearer.
+            </p>
+            <span className="text-button">
+              Add a property
+              <ArrowUpRightIcon />
+            </span>
+          </button>
+        </div>
+      )}
       <RequestEntry requests={data.requests} onOpen={onRequests} />
       <div className="demo-entry demo-entry-wide">
         <div>

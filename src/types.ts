@@ -12,6 +12,7 @@ export interface Property {
   municipality: Municipality;
   account: string;
   kind: 'Home' | 'Rental' | 'Business';
+  location?: { lat: number; lng: number };
 }
 export interface Statement {
   id: string;
