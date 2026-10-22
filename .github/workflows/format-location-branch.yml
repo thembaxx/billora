@@ -1,0 +1,30 @@
+name: Format Location Explorer Branch
+on:
+  push:
+    branches:
+      - feat/location-explorer-webgl-20261022
+permissions:
+  contents: write
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/location-explorer-webgl-20261022
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run format
+      - name: Commit formatted source if needed
+        run: |
+          if ! git diff --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -m "style: format location explorer files"
+            git push origin HEAD:refs/heads/feat/location-explorer-webgl-20261022
+          fi
