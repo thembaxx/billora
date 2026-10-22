@@ -201,12 +201,19 @@ test('demo profile, authorisation and municipal sync are clearly simulated', asy
   await page.getByRole('button', { name: 'Explore demo', exact: true }).click();
   await expect(page.getByText('alex@example.com', { exact: true })).toBeVisible();
   await expect(page.getByText('DEMO CONNECTION', { exact: true })).toBeVisible();
+  // Audit the final colours, after the dialog's opacity entrance has completed.
+  await page.getByRole('dialog').evaluate(async (dialog) => {
+    await Promise.all(dialog.getAnimations().map((animation) => animation.finished));
+  });
   const audit = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
     .analyze();
-  expect(audit.violations.map((v) => ({ id: v.id, nodes: v.nodes.map((n) => n.target) }))).toEqual(
-    [],
-  );
+  expect(
+    audit.violations.map((v) => ({
+      id: v.id,
+      nodes: v.nodes.map((n) => ({ target: n.target, summary: n.failureSummary })),
+    })),
+  ).toEqual([]);
   await page.getByRole('button', { name: 'Disconnect demo', exact: true }).click();
   await expect(page.locator('.demo-connection')).toHaveCount(0);
   await page.getByRole('button', { name: 'Reset demo account & connections' }).click();
