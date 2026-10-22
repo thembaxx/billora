@@ -55,6 +55,8 @@ test('a map search occurs only on submit and property pins persist locally', asy
   await page.getByLabel('Property name').fill('Pinned property');
   await page.getByRole('button', { name: 'Find this property on a map' }).click();
   await page.getByRole('searchbox', { name: 'Find a place in South Africa' }).fill('Piet Retief');
+  // Public Nominatim permits no more than one request per second.
+  await page.waitForTimeout(1200);
   await page.getByRole('button', { name: 'Find', exact: true }).click();
   await page.getByRole('button', { name: 'Use this place' }).click();
   await page.getByRole('button', { name: 'Add property', exact: true }).last().click();
