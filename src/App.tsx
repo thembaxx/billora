@@ -21,7 +21,7 @@ import {
   WifiSlashIcon,
   XIcon,
 } from '@phosphor-icons/react';
-import type { Property, Settings, Statement, View, Workspace } from './types';
+import type { Property, ServiceRequest, Settings, Statement, View, Workspace } from './types';
 import {
   calendarFile,
   dateLabel,
@@ -41,6 +41,9 @@ import { SettingsDialog } from './components/SettingsDialog';
 import { Onboarding } from './components/Onboarding';
 import { Flower } from './components/Flower';
 import { DemoConnections } from './components/DemoConnections';
+import { RequestWorkspace } from './components/requests/RequestWorkspace';
+import { followUpDue, newRequest, type RequestMutation } from './lib/requests';
+import { clearRequestFiles, deleteRequestFile } from './lib/request-files';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 const nav = [
@@ -67,11 +70,21 @@ const pages: Record<View, { title: string; description: string }> = {
     description: 'A clearer view of what goes into your everyday.',
   },
 };
-type Dialog = 'settings' | 'import' | 'add' | 'search' | 'reminders' | 'tour' | 'demo' | null;
+type Dialog =
+  | 'settings'
+  | 'import'
+  | 'add'
+  | 'search'
+  | 'reminders'
+  | 'tour'
+  | 'demo'
+  | 'requests'
+  | null;
 const initialDialog = (): Dialog => {
   const params = new URLSearchParams(location.search);
   if (params.has('import')) return 'import';
   if (params.has('settings')) return 'settings';
+  if (params.has('requests')) return 'requests';
   return null;
 };
 interface InstallPrompt extends Event {
@@ -98,6 +111,9 @@ const initialSettings = (): Settings => {
 
 export default function App() {
   const [data, setData] = useState<Workspace>(readWorkspace);
+  const dataRef = useRef(data);
+  dataRef.current = data;
+  const [requestContext, setRequestContext] = useState<{ id: string; edit: boolean } | null>(null);
   const [settings, setSettings] = useState<Settings>(initialSettings);
   const [view, setView] = useState<View>(initialView);
   const [dialog, setDialog] = useState<Dialog>(initialDialog);
@@ -238,12 +254,38 @@ export default function App() {
   const update = (next: Workspace) => {
     try {
       localStorage.setItem('billora-workspace', JSON.stringify(next));
+      dataRef.current = next;
       setData(next);
       return true;
     } catch {
       notify('Your browser could not save these changes. Free some device storage and try again.');
       return false;
     }
+  };
+  const createRequest = (p: Property, statement?: Statement): ServiceRequest | null => {
+    const request = newRequest(p, statement);
+    const current = dataRef.current;
+    return update({ ...current, requests: [...current.requests, request] }) ? request : null;
+  };
+  const mutateRequest: RequestMutation = (id, change) => {
+    const current = dataRef.current;
+    if (!current.requests.some((r) => r.id === id)) return false;
+    return update({
+      ...current,
+      requests: current.requests.map((r) =>
+        r.id === id ? { ...change(r), updatedAt: new Date().toISOString() } : r,
+      ),
+    });
+  };
+  const openRequests = (context: { id: string; edit: boolean } | null = null) => {
+    setRequestContext(context);
+    setProperty(null);
+    setStatementId(null);
+    setDialog('requests');
+  };
+  const startRequest = (p: Property, statement?: Statement) => {
+    const request = createRequest(p, statement);
+    if (request) openRequests({ id: request.id, edit: true });
   };
   const updateSettings = (next: Settings) => {
     try {
@@ -282,6 +324,9 @@ export default function App() {
       .includes(query.toLowerCase()),
   );
   const sample = data.statements.some((s) => s.source === 'sample');
+  const requestFollowUps = data.requests
+    .filter((r) => r.status === 'submitted' && r.submission?.followUpOn)
+    .sort((a, b) => a.submission!.followUpOn.localeCompare(b.submission!.followUpOn));
   return (
     <MotionConfig reducedMotion={reduced ? 'always' : 'user'}>
       <a href="#main-content" className="skip-link">
@@ -319,10 +364,10 @@ export default function App() {
           <button
             className="icon-button notification-button"
             onClick={() => setDialog('reminders')}
-            aria-label={`Reminders, ${pending.length} upcoming accounts`}
+            aria-label={`Reminders, ${pending.length} upcoming accounts, ${requestFollowUps.length} personal follow-ups`}
           >
             <BellIcon size={21} />
-            {pending.length > 0 && <i />}
+            {(pending.length > 0 || data.requests.some(followUpDue)) && <i />}
           </button>
           <button
             className="icon-button"
@@ -433,6 +478,7 @@ export default function App() {
             onReminders={() => setDialog('reminders')}
             onTour={() => setDialog('tour')}
             onDemo={() => setDialog('demo')}
+            onRequests={() => openRequests()}
           />
         )}
         {view === 'properties' && (
@@ -441,6 +487,7 @@ export default function App() {
             settings={settings}
             onAdd={() => setDialog('add')}
             onDemo={() => setDialog('demo')}
+            onRequests={() => openRequests()}
             onProperty={setProperty}
           />
         )}
@@ -517,21 +564,26 @@ export default function App() {
               'billora-account-data.json',
               'application/json',
             );
-            notify('Account data exported. Download original PDFs from each statement.');
+            notify(
+              'Account records exported. Download original PDFs and request ZIPs separately for file copies.',
+            );
           }}
           onClear={async () => {
             try {
-              await clearDocuments();
-              if (update({ properties: [], statements: [] })) {
+              await Promise.all([clearDocuments(), clearRequestFiles()]);
+              if (update({ properties: [], statements: [], requests: [] })) {
                 setDialog(null);
                 notify('A clean slate. Your workspace is ready for your own accounts.');
               }
             } catch {
-              notify('Could not clear the document store. Your workspace has been kept.');
+              notify(
+                'Could not finish clearing local files. Try again or use your browser’s site-data controls.',
+              );
             }
           }}
           onTour={() => setDialog('tour')}
           onDemo={() => setDialog('demo')}
+          onRequests={() => openRequests()}
         />
       )}
       {dialog === 'tour' && (
@@ -539,6 +591,35 @@ export default function App() {
       )}
       {dialog === 'demo' && (
         <DemoConnections data={data} onClose={closeDialog} onAddProperty={() => setDialog('add')} />
+      )}
+      {dialog === 'requests' && (
+        <RequestWorkspace
+          data={data}
+          hidden={settings.hideBalances}
+          initial={requestContext}
+          onCreate={createRequest}
+          onMutate={mutateRequest}
+          onClose={closeDialog}
+          onAddProperty={() => setDialog('add')}
+          notify={notify}
+          onDelete={async (id) => {
+            const request = dataRef.current.requests.find((r) => r.id === id);
+            if (!request) return false;
+            try {
+              await Promise.all(request.evidence.map((f) => deleteRequestFile(f.id)));
+              const current = dataRef.current;
+              const removed = update({
+                ...current,
+                requests: current.requests.filter((r) => r.id !== id),
+              });
+              if (removed) notify('Local request and its attached evidence removed.');
+              return removed;
+            } catch {
+              notify('Could not remove the request evidence. Please try again.');
+              return false;
+            }
+          }}
+        />
       )}
       {dialog === 'search' && (
         <Modal
@@ -588,6 +669,23 @@ export default function App() {
                 <ArrowUpRightIcon />
               </button>
             ))}
+            {data.requests
+              .filter((r) =>
+                `${r.localReference} ${r.property.name} ${r.description}`
+                  .toLowerCase()
+                  .includes(query.toLowerCase()),
+              )
+              .slice(0, 5)
+              .map((r) => (
+                <button key={r.id} onClick={() => openRequests({ id: r.id, edit: false })}>
+                  <FileTextIcon />
+                  <span>
+                    {r.property.name}
+                    <small>Service request · {r.localReference}</small>
+                  </span>
+                  <ArrowUpRightIcon />
+                </button>
+              ))}
             {query &&
               data.statements
                 .filter((s) =>
@@ -607,6 +705,11 @@ export default function App() {
             {query &&
               !matches.length &&
               !nav.some((n) => n.label.toLowerCase().includes(query.toLowerCase())) &&
+              !data.requests.some((r) =>
+                `${r.localReference} ${r.property.name} ${r.description}`
+                  .toLowerCase()
+                  .includes(query.toLowerCase()),
+              ) &&
               !data.statements.some((s) =>
                 `${s.period} ${s.fileName || ''}`.toLowerCase().includes(query.toLowerCase()),
               ) && (
@@ -620,7 +723,7 @@ export default function App() {
       {dialog === 'reminders' && (
         <Modal
           title="A little ahead of the everyday."
-          description="Due dates from the latest statement for each property."
+          description="Statement due dates and your chosen service-request follow-ups."
           onClose={closeDialog}
         >
           <div className="reminder-list">
@@ -655,7 +758,28 @@ export default function App() {
               </div>
             ))}
           </div>
-          {!pending.length && (
+          {requestFollowUps.length > 0 && (
+            <section className="request-reminders">
+              <h3>Your service-request follow-ups</h3>
+              <p className="request-help">
+                Dates chosen by you, not official municipal response deadlines.
+              </p>
+              {requestFollowUps.map((r) => (
+                <button key={r.id} onClick={() => openRequests({ id: r.id, edit: false })}>
+                  <span>
+                    <strong>{r.property.name}</strong>
+                    <small>
+                      {r.submission!.reference} ·{' '}
+                      {followUpDue(r) ? 'Your follow-up is due' : 'Personal reminder'}
+                    </small>
+                  </span>
+                  <time className="numeric">{r.submission!.followUpOn}</time>
+                  <ArrowUpRightIcon size={18} />
+                </button>
+              ))}
+            </section>
+          )}
+          {!pending.length && !requestFollowUps.length && (
             <div className="empty-state">
               <CheckCircleIcon size={44} />
               <h3>A little breathing room.</h3>
@@ -675,6 +799,7 @@ export default function App() {
           hidden={settings.hideBalances}
           onClose={() => setProperty(null)}
           onImport={showImport}
+          onRequest={() => startRequest(property)}
           onStatement={showStatement}
         />
       )}
@@ -685,6 +810,12 @@ export default function App() {
           hidden={settings.hideBalances}
           onClose={() => setStatementId(null)}
           notify={notify}
+          onRequest={() =>
+            startRequest(
+              data.properties.find((p) => p.id === currentStatement.propertyId)!,
+              currentStatement,
+            )
+          }
           onUpdate={(s) => {
             if (
               update({

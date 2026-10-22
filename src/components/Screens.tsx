@@ -17,6 +17,7 @@ import { latestStatements, money, dateLabel, download } from '../lib/data';
 import { PropertyCard } from './PropertyCard';
 import { SpendingChart } from './SpendingChart';
 import { AccountCabinet } from './AccountCabinet';
+import { RequestEntry } from './requests/RequestEntry';
 
 export function Properties({
   data,
@@ -24,12 +25,14 @@ export function Properties({
   onAdd,
   onProperty,
   onDemo,
+  onRequests,
 }: {
   data: Workspace;
   settings: Settings;
   onAdd: () => void;
   onProperty: (p: Property) => void;
   onDemo: () => void;
+  onRequests: () => void;
 }) {
   const [filter, setFilter] = useState('All properties');
   const latest = latestStatements(data);
@@ -78,6 +81,7 @@ export function Properties({
           </span>
         </button>
       </div>
+      <RequestEntry requests={data.requests} onOpen={onRequests} />
       <div className="demo-entry demo-entry-wide">
         <div>
           <span className="demo-label">DEMO INTEGRATION</span>

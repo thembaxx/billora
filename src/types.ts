@@ -31,6 +31,43 @@ export interface Statement {
 export interface Workspace {
   properties: Property[];
   statements: Statement[];
+  requests: ServiceRequest[];
+}
+export type RequestKind = 'billing' | 'meter' | 'water' | 'electricity' | 'refuse' | 'other';
+export interface RequestAttachment {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+}
+export interface RequestEvent {
+  id: string;
+  at: string;
+  text: string;
+}
+export interface ServiceRequest {
+  id: string;
+  localReference: string;
+  propertyId: string;
+  property: Pick<Property, 'name' | 'address' | 'municipality' | 'account'>;
+  kind: RequestKind;
+  description: string;
+  desiredOutcome: string;
+  incidentDate: string;
+  statement?: Pick<Statement, 'id' | 'period' | 'amount' | 'source' | 'fileId' | 'fileName'>;
+  evidence: RequestAttachment[];
+  checked: string[];
+  confirmed: boolean;
+  status: 'draft' | 'ready' | 'submitted' | 'resolved';
+  submission?: {
+    reference: string;
+    channel: string;
+    date: string;
+    followUpOn: string;
+  };
+  events: RequestEvent[];
+  createdAt: string;
+  updatedAt: string;
 }
 export interface Settings {
   theme: 'light' | 'dark' | 'system';

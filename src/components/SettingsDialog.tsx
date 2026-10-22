@@ -22,6 +22,7 @@ export function SettingsDialog({
   onClear,
   onTour,
   onDemo,
+  onRequests,
   offline,
 }: {
   settings: Settings;
@@ -33,6 +34,7 @@ export function SettingsDialog({
   onClear: () => Promise<void>;
   onTour: () => void;
   onDemo: () => void;
+  onRequests: () => void;
   offline: boolean;
 }) {
   const [clear, setClear] = useState(false);
@@ -125,8 +127,8 @@ export function SettingsDialog({
           <p className="small-note">
             <ShieldCheckIcon size={17} />
             Your data and original PDFs are stored in this browser on this device. There is no cloud
-            sync or account login. Export records and keep copies of your PDFs before clearing
-            browser data.
+            sync or account login. Service requests, notes and evidence are also local. Export
+            records and keep copies of your PDFs before clearing browser data.
           </p>
           <button className="settings-action" onClick={onExport}>
             <ArrowDownIcon />
@@ -137,11 +139,15 @@ export function SettingsDialog({
             Take the welcome tour
             <ArrowUpRightIcon />
           </button>
+          <button className="settings-action" onClick={onRequests}>
+            Service requests &amp; follow-ups <ArrowUpRightIcon />
+          </button>
           {clear ? (
             <div className="delete-section">
               <p>
-                This removes all sample and imported records, properties and original PDFs from this
-                device. Export anything you need first.
+                This removes all sample and imported records, properties, original PDFs, service
+                requests, timelines and request evidence from this device. Preferences and demo
+                records remain. Export anything you need first.
               </p>
               <div>
                 <button className="button secondary" onClick={() => setClear(false)}>

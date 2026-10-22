@@ -21,6 +21,7 @@ export function PropertyDetail({
   onClose,
   onStatement,
   onImport,
+  onRequest,
   hidden,
 }: {
   property: Property;
@@ -28,6 +29,7 @@ export function PropertyDetail({
   onClose: () => void;
   onStatement: (s: Statement) => void;
   onImport: () => void;
+  onRequest: () => void;
   hidden: boolean;
 }) {
   const statements = data.statements
@@ -63,6 +65,10 @@ export function PropertyDetail({
         <ArrowUpRightIcon />
       </a>
       <p className="small-note centered">Billora doesn’t process payments or confirm settlement.</p>
+      <button className="button secondary full" onClick={onRequest}>
+        <FileTextIcon size={18} />
+        Prepare a service request
+      </button>
       <div className="card-heading detail-section-heading">
         <h3>Statement history</h3>
         <button className="text-button" onClick={onImport}>
@@ -95,6 +101,7 @@ export function StatementDetail({
   onDelete,
   notify,
   hidden,
+  onRequest,
 }: {
   statement: Statement;
   property: Property;
@@ -103,6 +110,7 @@ export function StatementDetail({
   onDelete: () => void;
   notify: (v: string) => void;
   hidden: boolean;
+  onRequest: () => void;
 }) {
   const [confirm, setConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -119,13 +127,6 @@ export function StatementDetail({
       setLoading(false);
     }
   }
-  const draft = () => {
-    download(
-      `Municipal account query — DRAFT\n\nTo: ${property.municipality}\nAccount: ${property.account || '[add account number]'}\nProperty: ${property.address}\nStatement period: ${s.period}\nAmount shown: ${money(s.amount)}\n\nDear Municipal Accounts Team,\n\nPlease assist me in reviewing the charges on my municipal account for the above period.\n\nMy query: [describe the charge, reading or discrepancy you want reviewed]\n\nSupporting documents: [attach your statement and any meter readings]\n\nPlease provide a breakdown of the relevant charges and confirm the next steps.\n\nKind regards,\n[Your name and contact details]\n\nPrepared in Billora. This draft has not been submitted to the municipality.`,
-      `billora-query-draft-${s.period}.txt`,
-    );
-    notify('Query draft downloaded. Submit it through your municipality.');
-  };
   return (
     <Modal
       title={`${dateLabel(s.period + '-01', { month: 'long', year: 'numeric' })} statement`}
@@ -172,9 +173,9 @@ export function StatementDetail({
           <CalendarPlusIcon />
           Add reminder
         </button>
-        <button className="button secondary" onClick={draft}>
+        <button className="button secondary" onClick={onRequest}>
           <FileTextIcon />
-          Draft a query
+          Prepare service request
         </button>
         {typeof navigator.share === 'function' && (
           <button

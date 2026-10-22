@@ -5,6 +5,7 @@ import '@fontsource-variable/geist-mono';
 import App from './App';
 import './styles.css';
 import './polish.css';
+import './requests.css';
 
 class AppBoundary extends React.Component<{ children: React.ReactNode }, { failed: boolean }> {
   state = { failed: false };

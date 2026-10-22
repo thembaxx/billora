@@ -58,12 +58,13 @@ export function demoData(): Workspace {
       paidNote: i < 5,
     })),
   );
-  return { properties, statements };
+  return { properties, statements, requests: [] };
 }
 export function readWorkspace(): Workspace {
   try {
     const d = JSON.parse(localStorage.getItem('billora-workspace') || 'null');
-    if (d && Array.isArray(d.properties) && Array.isArray(d.statements)) return d;
+    if (d && Array.isArray(d.properties) && Array.isArray(d.statements))
+      return { ...d, requests: Array.isArray(d.requests) ? d.requests : [] };
   } catch {
     /* An unavailable store falls back to sample data. */
   }

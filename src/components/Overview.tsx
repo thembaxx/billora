@@ -19,6 +19,7 @@ import { AnimatedAmount } from './AnimatedAmount';
 import { Flower } from './Flower';
 import { SpendingChart } from './SpendingChart';
 import { PropertyCard } from './PropertyCard';
+import { RequestEntry } from './requests/RequestEntry';
 
 interface Props {
   data: Workspace;
@@ -30,6 +31,7 @@ interface Props {
   onReminders: () => void;
   onTour: () => void;
   onDemo: () => void;
+  onRequests: () => void;
 }
 export function Overview({
   data,
@@ -41,6 +43,7 @@ export function Overview({
   onReminders,
   onTour,
   onDemo,
+  onRequests,
 }: Props) {
   const latest = latestStatements(data);
   const total = latest.reduce((a, s) => a + s.amount, 0);
@@ -246,6 +249,7 @@ export function Overview({
           </button>
         </section>
       </div>
+      <RequestEntry requests={data.requests} onOpen={onRequests} />
       <div className="bottom-grid">
         <section className="card getting-started reveal">
           <div className="card-heading">

@@ -10,6 +10,8 @@ Billora helps homeowners, tenants, landlords and businesses organise municipal s
 - Import a PDF up to 15 MB. Text extraction runs on the device; users review and enter totals, statement periods, due dates and optional category amounts.
 - Original PDFs live in IndexedDB; account metadata and preferences live in localStorage.
 - Calendar reminders download as ICS files. Query letters are drafts downloaded as text; they are not lodged automatically.
+- Service Request Assistant: local guided drafts, general issue-specific evidence checklists, PDF/photo attachments, ZIP request packs, user-recorded submission references, notes, resolution and personal follow-up dates. No case status is verified by a municipality. The checklists are not official application forms.
+- Request metadata lives in billora-workspace; binary attachments live in the billora-request-evidence IndexedDB database. Account JSON includes metadata only; request ZIPs include available files. Workspace reset removes requests/evidence and keeps preferences/demo state.
 - Payment buttons link to official municipal portals. Billora does not accept payments or verify settlement.
 - The initial accounts are labelled illustrative sample data, dated May–October 2026. Settings can clear the workspace before entering real accounts.
 - Light, dark and system themes, reduced motion, hidden balances, offline app shell and PWA installation support.

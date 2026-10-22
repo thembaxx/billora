@@ -16,12 +16,13 @@ There are no invented email addresses, registration numbers, data-residency guar
 
 ## Scope verified against source
 
-- `src/App.tsx`: metadata/settings in localStorage; account JSON export; workspace reset clears properties, statements and original PDFs, while preferences and demo state remain.
+- `src/App.tsx`: metadata/settings in localStorage; account JSON export; workspace reset clears properties, statements, requests, original PDFs and request evidence, while preferences and demo state remain.
 - `src/lib/documents.ts`: original PDFs in the `billora-documents` IndexedDB database, `originals` store; PDF text extraction runs in a local worker and examines at most 20 pages.
 - `src/lib/demo.ts` and `src/components/DemoConnections.tsx`: local demo profile/authorisation timestamps, fixed sync fixtures, separate reset; no real provider account or permissions.
-- `src/components/DetailDialogs.tsx`: statement deletion, original downloads, personal payment notes, official payment links and unsubmitted query drafts.
+- `src/components/DetailDialogs.tsx`: statement deletion, original downloads, personal payment notes, official payment links and entry points into the local Service Request Assistant.
+- `src/components/requests/` and `src/lib/request-files.ts`: local request metadata/timelines, draft ZIPs, user-recorded statuses and a separate IndexedDB evidence store; request deletion/reset and JSON export boundaries are documented.
 - `vite.config.ts`: public app-shell/asset precache. No statement-upload endpoint, analytics SDK, advertising tags or cloud-document backend exists in this release.
-- Downloaded JSON contains metadata and extracted text, not PDF binaries. JSON restore is not implemented. Logical browser deletion does not guarantee forensic erasure, remove exports/backups, or change municipal source records.
+- Downloaded JSON contains metadata and extracted text, not PDF or request-evidence binaries. JSON restore is not implemented. Logical browser deletion does not guarantee forensic erasure, remove exports/backups, or change municipal source records.
 
 Hosting and sign-in are separate from browser-local account records. App-source inspection does not prove the infrastructure has no cookies or logs. Those details remain explicitly pending in the published drafts.
 
@@ -41,6 +42,6 @@ No messages or privacy requests were sent to any third party while preparing the
 
 ## Verification
 
-Production build, Oxlint, Oxfmt and the seven Playwright journeys passed locally. The legal journey checks all seven direct canonical URLs, theme inheritance, policy readability at 320/390/1440 px, Axe A/AA checks in light/dark, offline legal navigation and the return-to-Settings data-control link. Account records remain unchanged by legal-page navigation. The static privacy page was also checked with JavaScript disabled and the data policy exported through the print layout. This is browser verification, not a legal compliance audit or real-device Safari verification.
+Production build, Oxlint, Oxfmt and the nine Playwright journeys passed locally. The legal journey checks all seven direct canonical URLs, theme inheritance, policy readability at 320/390/1440 px, Axe A/AA checks in light/dark, offline legal navigation and the return-to-Settings data-control link. Account records remain unchanged by legal-page navigation. The static privacy page was also checked with JavaScript disabled and the data policy exported through the print layout. This is browser verification, not a legal compliance audit or real-device Safari verification.
 
 Review captures: [legal hub](screenshots/08-legal-desktop.png), [mobile privacy policy](screenshots/09-privacy-mobile.png).
