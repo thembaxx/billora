@@ -169,6 +169,26 @@ test('full ZIP export restores an original PDF and request evidence', async ({ p
     Buffer.compare(await readFile((await (await originalEvent).path())!), statementPDF()),
   ).toBe(0);
   await page.goto('/?requests=1');
-  await page.locator('.request-list li button').first().click();
-  await expect(page.getByRole('dialog')).toContainText('evidence.pdf');
+  await expect(page.locator('.request-list li')).toHaveCount(1);
+  const restoredEvidence = await page.evaluate(async () => {
+    const state = JSON.parse(localStorage.getItem('billora-workspace') || '{}');
+    const evidenceId = state.requests[0].evidence[0].id as string;
+    return new Promise<string>((resolve, reject) => {
+      const opening = indexedDB.open('billora-request-evidence');
+      opening.onerror = () => reject(new Error('Evidence database unavailable'));
+      opening.onsuccess = () => {
+        const transaction = opening.result.transaction('files', 'readonly');
+        const reading = transaction.objectStore('files').get(evidenceId);
+        reading.onerror = () => reject(new Error('Evidence read failed'));
+        reading.onsuccess = () => {
+          if (!(reading.result instanceof Blob)) {
+            reject(new Error('Restored evidence is missing'));
+            return;
+          }
+          void reading.result.text().then(resolve, reject);
+        };
+      };
+    });
+  });
+  expect(restoredEvidence).toBe('User supplied local evidence');
 });

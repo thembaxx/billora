@@ -205,7 +205,7 @@ test('legacy workspaces support request drafts, exports and complete request-evi
   await page.getByRole('button', { name: 'Open settings', exact: true }).click();
   await page.getByRole('button', { name: 'Dark', exact: true }).click();
   const exportDownload = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Export account data (JSON)' }).click();
+  await page.getByRole('button', { name: 'Export account data (JSON, no PDFs)' }).click();
   const exported = await exportDownload;
   const record = JSON.parse(await readFile((await exported.path())!, 'utf8'));
   expect(record.requests[0].evidence[0].name).toBe('collection.pdf');
