@@ -24,6 +24,9 @@ Cloud account and authorised municipal integration demonstrations are clearly la
 
 ## Source
 
+- [Privacy & legal](/legal/): six policy drafts for the current preview. Operator identity, privacy contact and infrastructure details are pending. These are not final production policies or a compliance certification.
+- [Privacy policy](/legal/privacy/), [data retention and deletion](/legal/data/), [terms of use](/legal/terms/), [storage and cookies](/legal/storage/), [integration disclaimer](/legal/integrations/) and [POPIA rights](/legal/popia/).
+
 - [Repository](https://github.com/thembaxx/billora): source code, setup and implementation notes.
 - [Theming reference](https://web.dev/learn/design/theming): browser and system theme guidance.
 - [EasyUI](https://easyui.site/components): adapted animated tabs and rolling numbers.

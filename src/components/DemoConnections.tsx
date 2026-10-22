@@ -346,7 +346,15 @@ export function DemoConnections({
       <p className="small-note demo-footer">
         Real cloud authentication, protected storage and municipal access require a separate
         production backend and authorised provider agreements. Demo balances never change your
-        imported statements or payment notes.
+        imported statements or payment notes.{' '}
+        <a
+          className="inline-policy-link"
+          href="/legal/integrations/"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Read the integration disclaimer<span className="sr-only"> (opens in a new tab)</span>
+        </a>
       </p>
     </Modal>
   );

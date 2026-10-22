@@ -3,5 +3,9 @@
   "semi": true,
   "trailingComma": "all",
   "printWidth": 100,
-  "ignorePatterns": ["scripts/vendor/**", "src/assets/account-cabinet.svg"]
+  "ignorePatterns": [
+    "scripts/vendor/**",
+    "src/assets/account-cabinet.svg",
+    "public/legal/**/index.html"
+  ]
 }

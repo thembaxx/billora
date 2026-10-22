@@ -68,6 +68,12 @@ const pages: Record<View, { title: string; description: string }> = {
   },
 };
 type Dialog = 'settings' | 'import' | 'add' | 'search' | 'reminders' | 'tour' | 'demo' | null;
+const initialDialog = (): Dialog => {
+  const params = new URLSearchParams(location.search);
+  if (params.has('import')) return 'import';
+  if (params.has('settings')) return 'settings';
+  return null;
+};
 interface InstallPrompt extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: string }>;
@@ -94,9 +100,7 @@ export default function App() {
   const [data, setData] = useState<Workspace>(readWorkspace);
   const [settings, setSettings] = useState<Settings>(initialSettings);
   const [view, setView] = useState<View>(initialView);
-  const [dialog, setDialog] = useState<Dialog>(
-    new URLSearchParams(location.search).has('import') ? 'import' : null,
-  );
+  const [dialog, setDialog] = useState<Dialog>(initialDialog);
   const [property, setProperty] = useState<Property | null>(null);
   const [statementId, setStatementId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
@@ -156,7 +160,7 @@ export default function App() {
   useEffect(() => {
     const pop = () => {
       setView(initialView());
-      setDialog(new URLSearchParams(location.search).has('import') ? 'import' : null);
+      setDialog(initialDialog());
       setProperty(null);
       setStatementId(null);
     };

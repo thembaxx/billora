@@ -2022,3 +2022,40 @@ html[data-theme='dark'] .demo-disclosure {
     min-width: 0;
   }
 }
+.settings-legal {
+  border-top: 1px solid var(--line);
+  padding-top: 24px;
+  margin-top: 26px;
+}
+.settings-legal h3 {
+  font-size: 15px;
+  font-weight: 500;
+}
+.settings-legal > p {
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--muted);
+  margin: 9px 0 15px;
+}
+.settings-legal > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px 16px;
+}
+.settings-legal a {
+  min-height: 44px;
+  padding: 8px 0;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.settings-legal a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.inline-policy-link {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

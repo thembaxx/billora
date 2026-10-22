@@ -236,3 +236,83 @@ test('Anatomy drawer reads the same category values and respects privacy', async
   expect(robots.ok()).toBe(true);
   expect(await robots.text()).toContain('Sitemap:');
 });
+
+test('legal documents have direct URLs, follow the theme and remain available offline', async ({
+  page,
+  context,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+  await page.evaluate(async () => {
+    await navigator.serviceWorker.ready;
+  });
+  await expect
+    .poll(() => page.evaluate(() => navigator.serviceWorker.controller !== null))
+    .toBe(true);
+  await page.getByRole('button', { name: 'Properties', exact: true }).click();
+  await page.getByRole('button', { name: 'Add property', exact: true }).click();
+  await page.getByLabel('Property name').fill('Legal review home');
+  await page.getByLabel('Street address').fill('12 Example Street, Cape Town');
+  await page.getByRole('button', { name: 'Add property', exact: true }).last().click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Open settings', exact: true }).click();
+  await page.getByRole('button', { name: 'Dark', exact: true }).click();
+  const stored = await page.evaluate(() => localStorage.getItem('billora-workspace'));
+  expect(stored).toContain('Legal review home');
+  await page.getByRole('link', { name: 'Privacy policy', exact: true }).click();
+  await expect(page).toHaveURL(/\/legal\/privacy\/$/);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Your information, explained.');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await expect(page.locator('.draft-notice')).toContainText('Preview policy drafts.');
+  await expect(page.getByRole('button', { name: 'Print / save PDF' })).toBeVisible();
+
+  for (const slug of ['', 'privacy', 'data', 'terms', 'storage', 'integrations', 'popia']) {
+    const path = `/legal/${slug ? `${slug}/` : ''}`;
+    const response = await page.request.get(path);
+    expect(response.ok(), path).toBe(true);
+    const html = await response.text();
+    expect(html).toContain(
+      `rel="canonical" href="https://billora-workspace.sillykoala8.chatgpt.site${path}"`,
+    );
+    expect(html).toContain('<h1>');
+    expect(html).not.toContain('<div id="root">');
+  }
+
+  for (const theme of ['dark', 'light']) {
+    await page.evaluate((theme) => {
+      const settings = JSON.parse(localStorage.getItem('billora-settings') || '{}');
+      localStorage.setItem('billora-settings', JSON.stringify({ ...settings, theme }));
+    }, theme);
+    for (const slug of ['privacy', 'data']) {
+      await page.goto(`/legal/${slug}/`);
+      await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+      for (const width of [320, 390, 1440]) {
+        await page.setViewportSize({ width, height: 900 });
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+          true,
+        );
+      }
+      const audit = await new AxeBuilder({ page })
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+        .analyze();
+      expect(
+        audit.violations.map((v) => ({ id: v.id, nodes: v.nodes.map((n) => n.target) })),
+      ).toEqual([]);
+    }
+  }
+
+  await context.setOffline(true);
+  await page.goto('/legal/data/');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+    'Keep what matters. Clear the rest.',
+  );
+  await page
+    .getByRole('navigation', { name: 'Policy documents' })
+    .getByRole('link', { name: /Integration disclaimer/ })
+    .click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('A demo, from start to sync.');
+  await expect(page.locator('.policy-copy')).toContainText('liveMunicipalConnection: false');
+  await page.getByRole('link', { name: 'Manage workspace data' }).click();
+  await expect(page.getByRole('dialog')).toContainText('Your workspace');
+  expect(await page.evaluate(() => localStorage.getItem('billora-workspace'))).toBe(stored);
+});

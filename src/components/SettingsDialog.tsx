@@ -170,6 +170,24 @@ export function SettingsDialog({
             <ArrowUpRightIcon />
           </button>
         </section>
+        <section className="settings-legal" aria-labelledby="settings-legal-title">
+          <h3 id="settings-legal-title">Privacy &amp; legal</h3>
+          <p>Clear policies for this browser-local preview. Operator details are still pending.</p>
+          <div>
+            <a href="/legal/privacy/">
+              Privacy policy <ArrowUpRightIcon size={16} />
+            </a>
+            <a href="/legal/data/">
+              Data &amp; deletion <ArrowUpRightIcon size={16} />
+            </a>
+            <a href="/legal/terms/">
+              Terms of use <ArrowUpRightIcon size={16} />
+            </a>
+            <a href="/legal/">
+              All legal documents <ArrowUpRightIcon size={16} />
+            </a>
+          </div>
+        </section>
         <div className="settings-footer">
           <img src="/logo.png" width="24" alt="" />
           <span>

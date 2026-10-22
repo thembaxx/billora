@@ -325,6 +325,9 @@ export function Overview({
           Made for South Africa
           <ArrowUpRightIcon size={14} />
         </a>
+        <a href="/legal/">
+          Privacy &amp; legal <ArrowUpRightIcon size={14} />
+        </a>
         <button
           className="text-button"
           onClick={() => window.scrollTo({ top: 0, behavior: reduced ? 'instant' : 'smooth' })}

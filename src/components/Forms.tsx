@@ -397,7 +397,17 @@ export function ImportForm({
           </label>
           <p className="small-note">
             <ShieldCheckIcon size={16} />
-            Your original PDF and reviewed figures stay on this device.
+            <span>
+              Your original PDF and reviewed figures stay on this device.{' '}
+              <a
+                className="inline-policy-link"
+                href="/legal/privacy/"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Privacy policy<span className="sr-only"> (opens in a new tab)</span>
+              </a>
+            </span>
           </p>
           {error && (
             <p className="error-message" role="alert">
