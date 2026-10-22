@@ -24,8 +24,12 @@ const MAX_LAT = 85.05112878;
 export function validPoint(value: unknown): value is GeoPoint {
   if (!value || typeof value !== 'object') return false;
   const point = value as GeoPoint;
-  return Number.isFinite(point.lat) && Number.isFinite(point.lng) &&
-    Math.abs(point.lat) <= 90 && Math.abs(point.lng) <= 180;
+  return (
+    Number.isFinite(point.lat) &&
+    Number.isFinite(point.lng) &&
+    Math.abs(point.lat) <= 90 &&
+    Math.abs(point.lng) <= 180
+  );
 }
 
 export function project(point: GeoPoint, zoom: number): { x: number; y: number } {
@@ -40,8 +44,8 @@ export function project(point: GeoPoint, zoom: number): { x: number; y: number }
 
 export function unproject(x: number, y: number, zoom: number): GeoPoint {
   const world = TILE_SIZE * 2 ** zoom;
-  const longitude = ((((x / world) * 360 + 180) % 360) + 360) % 360 - 180;
-  const n = Math.PI * (1 - 2 * Math.max(0, Math.min(world, y)) / world);
+  const longitude = (((((x / world) * 360 + 180) % 360) + 360) % 360) - 180;
+  const n = Math.PI * (1 - (2 * Math.max(0, Math.min(world, y))) / world);
   return {
     lat: (180 / Math.PI) * Math.atan(Math.sinh(n)),
     lng: longitude,
@@ -81,7 +85,12 @@ export function panMap(center: GeoPoint, zoom: number, dx: number, dy: number) {
   return unproject(c.x - dx, c.y - dy, zoom);
 }
 
-export function visibleTiles(center: GeoPoint, zoom: number, width: number, height: number): MapTile[] {
+export function visibleTiles(
+  center: GeoPoint,
+  zoom: number,
+  width: number,
+  height: number,
+): MapTile[] {
   if (width <= 0 || height <= 0) return [];
   const c = project(center, zoom);
   const tilesPerAxis = 2 ** zoom;
@@ -116,7 +125,10 @@ interface SearchResult {
 }
 
 let lastSearchAt = 0;
-export async function searchSouthAfricanPlaces(query: string, signal?: AbortSignal): Promise<NamedPlace[]> {
+export async function searchSouthAfricanPlaces(
+  query: string,
+  signal?: AbortSignal,
+): Promise<NamedPlace[]> {
   const trimmed = query.trim();
   if (trimmed.length < 3 || trimmed.length > 140) {
     throw new Error('Enter at least three characters to search for a place.');

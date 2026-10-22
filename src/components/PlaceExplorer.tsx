@@ -2,13 +2,21 @@ import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 import {
-  ArrowRightIcon, CrosshairIcon, MagnifyingGlassIcon, MapPinIcon,
-  NavigationArrowIcon, ShieldCheckIcon, WarningCircleIcon,
+  ArrowRightIcon,
+  CrosshairIcon,
+  MagnifyingGlassIcon,
+  MapPinIcon,
+  NavigationArrowIcon,
+  ShieldCheckIcon,
+  WarningCircleIcon,
 } from '@phosphor-icons/react';
 import type { Property } from '../types';
 import {
-  SA_CENTER, searchSouthAfricanPlaces, validPoint,
-  type GeoPoint, type NamedPlace,
+  SA_CENTER,
+  searchSouthAfricanPlaces,
+  validPoint,
+  type GeoPoint,
+  type NamedPlace,
 } from '../lib/location';
 import { GeoCompass } from './GeoCompass';
 import { LiveMap } from './LiveMap';
@@ -26,9 +34,9 @@ export function PlaceExplorer({
   const searchRef = useRef<AbortController | null>(null);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<NamedPlace[]>([]);
-  const [center, setCenter] = useState<GeoPoint>(() => (
-    properties.find((property) => validPoint(property.location))?.location || SA_CENTER
-  ));
+  const [center, setCenter] = useState<GeoPoint>(
+    () => properties.find((property) => validPoint(property.location))?.location || SA_CENTER,
+  );
   const [zoom, setZoom] = useState(6);
   const [selected, setSelected] = useState<NamedPlace | null>(null);
   const [device, setDevice] = useState<GeoPoint | null>(null);
@@ -49,17 +57,20 @@ export function PlaceExplorer({
     };
   }, []);
 
-  useGSAP(() => {
-    if (reduced) return;
-    gsap.from('.geo-enter', {
-      opacity: 0,
-      y: 12,
-      duration: 0.48,
-      ease: 'power2.out',
-      stagger: 0.07,
-      clearProps: 'all',
-    });
-  }, { scope });
+  useGSAP(
+    () => {
+      if (reduced) return;
+      gsap.from('.geo-enter', {
+        opacity: 0,
+        y: 12,
+        duration: 0.48,
+        ease: 'power2.out',
+        stagger: 0.07,
+        clearProps: 'all',
+      });
+    },
+    { scope },
+  );
 
   async function find() {
     if (!online || searching) {
@@ -74,7 +85,8 @@ export function PlaceExplorer({
     try {
       const found = await searchSouthAfricanPlaces(query, controller.signal);
       setResults(found);
-      if (!found.length) setError('No matching places found in South Africa. Try a town or nearby landmark.');
+      if (!found.length)
+        setError('No matching places found in South Africa. Try a town or nearby landmark.');
       else {
         setCenter(found[0]);
         setZoom(14);
@@ -155,10 +167,18 @@ export function PlaceExplorer({
             maxLength={140}
             type="search"
             onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => {
-              if (event.key === 'Enter') { event.preventDefault(); void find(); }
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                void find();
+              }
             }}
           />
-          <button className="button primary small" disabled={searching || !online || query.trim().length < 3} type="button" onClick={() => void find()}>
+          <button
+            className="button primary small"
+            disabled={searching || !online || query.trim().length < 3}
+            type="button"
+            onClick={() => void find()}
+          >
             {searching ? 'Finding…' : 'Find'}
             <ArrowRightIcon size={16} aria-hidden="true" />
           </button>
@@ -224,11 +244,7 @@ export function PlaceExplorer({
           </div>
         </div>
         <div className="geo-selection-actions">
-          <button
-            type="button"
-            className="button secondary small"
-            onClick={() => pick(center)}
-          >
+          <button type="button" className="button secondary small" onClick={() => pick(center)}>
             Pin map centre
           </button>
           {onChoose && (
@@ -246,10 +262,10 @@ export function PlaceExplorer({
       </div>
       <p className="geo-disclosure">
         <ShieldCheckIcon size={16} aria-hidden="true" />
-        Location is requested only when you tap My location. Search terms go to
-        OpenStreetMap Nominatim and visible map tiles load from OpenStreetMap.
-        Device coordinates are not saved unless you choose a place. Map imagery and searches need internet;
-        no map tiles are downloaded for offline use.
+        Location is requested only when you tap My location. Search terms go to OpenStreetMap
+        Nominatim and visible map tiles load from OpenStreetMap. Device coordinates are not saved
+        unless you choose a place. Map imagery and searches need internet; no map tiles are
+        downloaded for offline use.
       </p>
     </div>
   );

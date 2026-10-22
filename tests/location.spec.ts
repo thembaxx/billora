@@ -44,7 +44,9 @@ test('a map search occurs only on submit and property pins persist locally', asy
   await page.getByRole('button', { name: 'Use this place' }).click();
   await page.getByLabel('Street address').fill('12 Test Lane, Piet Retief');
   await page.getByRole('button', { name: 'Add property', exact: true }).last().click();
-  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('billora-workspace') || '{}'));
+  const saved = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem('billora-workspace') || '{}'),
+  );
   const property = saved.properties.find((item: { name: string }) => item.name === 'Our place');
   // An edited address clears the pin: the app must never silently associate stale coordinates.
   expect(property.location).toBeUndefined();
@@ -56,17 +58,25 @@ test('a map search occurs only on submit and property pins persist locally', asy
   await page.getByRole('button', { name: 'Find', exact: true }).click();
   await page.getByRole('button', { name: 'Use this place' }).click();
   await page.getByRole('button', { name: 'Add property', exact: true }).last().click();
-  const pinned = await page.evaluate(() => JSON.parse(localStorage.getItem('billora-workspace') || '{}'));
-  const savedPin = pinned.properties.find((item: { name: string }) => item.name === 'Pinned property');
+  const pinned = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem('billora-workspace') || '{}'),
+  );
+  const savedPin = pinned.properties.find(
+    (item: { name: string }) => item.name === 'Pinned property',
+  );
   expect(savedPin.location).toEqual({ lat: -26.7773, lng: 30.8017 });
 
   await page.getByRole('button', { name: 'Explore map' }).click();
-  await expect(page.getByRole('button', { name: 'Open property on map: Pinned property' })).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Open property on map: Pinned property' }),
+  ).toBeVisible();
   await page.getByRole('button', { name: 'Open property on map: Pinned property' }).click();
   await expect(page.getByRole('dialog')).toContainText('Pinned property');
 });
 
-test('current location only activates after permission action and is not stored automatically', async ({ page }) => {
+test('current location only activates after permission action and is not stored automatically', async ({
+  page,
+}) => {
   await page.addInitScript(() => {
     let calls = 0;
     Object.defineProperty(navigator, 'geolocation', {
@@ -82,16 +92,23 @@ test('current location only activates after permission action and is not stored 
   });
   await page.goto('/?view=properties');
   await page.getByRole('button', { name: 'Explore map' }).click();
-  expect(await page.evaluate(() => (window as unknown as { __geoCalls: number }).__geoCalls)).toBe(0);
+  expect(await page.evaluate(() => (window as unknown as { __geoCalls: number }).__geoCalls)).toBe(
+    0,
+  );
   await page.getByRole('button', { name: 'Use my current device location' }).click();
   await expect(page.locator('.live-map-device')).toBeVisible();
-  expect(await page.evaluate(() => (window as unknown as { __geoCalls: number }).__geoCalls)).toBe(1);
-  const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('billora-workspace') || '{}'));
+  expect(await page.evaluate(() => (window as unknown as { __geoCalls: number }).__geoCalls)).toBe(
+    1,
+  );
+  const stored = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem('billora-workspace') || '{}'),
+  );
   expect(stored.properties.every((p: { location?: unknown }) => !p.location)).toBeTruthy();
 });
 
 test('map stays accessible at mobile sizes and offers a truthful offline fallback', async ({
-  page, context,
+  page,
+  context,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/?view=properties');
@@ -105,6 +122,8 @@ test('map stays accessible at mobile sizes and offers a truthful offline fallbac
   expect(accessibility.violations.map((v) => v.id)).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await context.setOffline(true);
-  await expect(page.getByText('Map tiles require an internet connection.', { exact: false })).toBeVisible();
+  await expect(
+    page.getByText('Map tiles require an internet connection.', { exact: false }),
+  ).toBeVisible();
   await context.setOffline(false);
 });

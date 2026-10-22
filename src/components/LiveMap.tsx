@@ -1,8 +1,15 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { MinusIcon, PlusIcon, MapPinIcon } from '@phosphor-icons/react';
 import {
-  geoAtScreen, panMap, screenPoint, visibleTiles, validPoint,
-  MAX_ZOOM, MIN_ZOOM, type GeoPoint, type NamedPlace,
+  geoAtScreen,
+  panMap,
+  screenPoint,
+  visibleTiles,
+  validPoint,
+  MAX_ZOOM,
+  MIN_ZOOM,
+  type GeoPoint,
+  type NamedPlace,
 } from '../lib/location';
 import type { Property } from '../types';
 
@@ -28,8 +35,16 @@ interface DragState {
 }
 
 export function LiveMap({
-  center, zoom, onCenter, onZoom, onPick, selected, device,
-  properties = [], onProperty, online,
+  center,
+  zoom,
+  onCenter,
+  onZoom,
+  onPick,
+  selected,
+  device,
+  properties = [],
+  onProperty,
+  online,
 }: LiveMapProps) {
   const host = useRef<HTMLDivElement>(null);
   const drag = useRef<DragState | null>(null);
@@ -78,7 +93,16 @@ export function LiveMap({
     }
     if (!active.moved) {
       const rect = event.currentTarget.getBoundingClientRect();
-      onPick(geoAtScreen(center, zoom, width, height, event.clientX - rect.left, event.clientY - rect.top));
+      onPick(
+        geoAtScreen(
+          center,
+          zoom,
+          width,
+          height,
+          event.clientX - rect.left,
+          event.clientY - rect.top,
+        ),
+      );
     }
   }
 
@@ -106,7 +130,9 @@ export function LiveMap({
         onPointerDown={down}
         onPointerMove={move}
         onPointerUp={up}
-        onPointerCancel={() => { drag.current = null; }}
+        onPointerCancel={() => {
+          drag.current = null;
+        }}
         onKeyDown={keyDown}
         onDoubleClick={(event) => {
           event.preventDefault();
@@ -127,39 +153,48 @@ export function LiveMap({
             style={{ transform: 'translate3d(' + tile.left + 'px,' + tile.top + 'px,0)' }}
           />
         ))}
-        {properties.filter((property) => validPoint(property.location)).map((property) => {
-          const p = location(property.location!);
-          if (p.x < -45 || p.x > width + 45 || p.y < -45 || p.y > height + 45) return null;
-          return (
-            <button
-              type="button"
-              key={property.id}
-              className="live-map-pin property"
-              style={{ left: p.x, top: p.y }}
-              aria-label={'Open property on map: ' + property.name}
-              onClick={() => onProperty?.(property)}
-            >
-              <MapPinIcon size={29} weight="fill" />
-              <span>{property.name}</span>
-            </button>
-          );
-        })}
-        {device && (() => {
-          const p = location(device);
-          return (
-            <div className="live-map-device" style={{ left: p.x, top: p.y }} aria-hidden="true">
-              <i /><span />
-            </div>
-          );
-        })()}
-        {selected && (() => {
-          const p = location(selected);
-          return (
-            <div className="live-map-pin selected" style={{ left: p.x, top: p.y }} aria-hidden="true">
-              <MapPinIcon size={35} weight="fill" />
-            </div>
-          );
-        })()}
+        {properties
+          .filter((property) => validPoint(property.location))
+          .map((property) => {
+            const p = location(property.location!);
+            if (p.x < -45 || p.x > width + 45 || p.y < -45 || p.y > height + 45) return null;
+            return (
+              <button
+                type="button"
+                key={property.id}
+                className="live-map-pin property"
+                style={{ left: p.x, top: p.y }}
+                aria-label={'Open property on map: ' + property.name}
+                onClick={() => onProperty?.(property)}
+              >
+                <MapPinIcon size={29} weight="fill" />
+                <span>{property.name}</span>
+              </button>
+            );
+          })}
+        {device &&
+          (() => {
+            const p = location(device);
+            return (
+              <div className="live-map-device" style={{ left: p.x, top: p.y }} aria-hidden="true">
+                <i />
+                <span />
+              </div>
+            );
+          })()}
+        {selected &&
+          (() => {
+            const p = location(selected);
+            return (
+              <div
+                className="live-map-pin selected"
+                style={{ left: p.x, top: p.y }}
+                aria-hidden="true"
+              >
+                <MapPinIcon size={35} weight="fill" />
+              </div>
+            );
+          })()}
         {!online && (
           <div className="live-map-offline" role="status">
             Map tiles require an internet connection. Saved pins remain available.
@@ -167,12 +202,20 @@ export function LiveMap({
         )}
       </div>
       <div className="live-map-controls" aria-label="Map zoom controls">
-        <button type="button" onClick={() => onZoom(Math.min(MAX_ZOOM, zoom + 1))}
-          disabled={zoom >= MAX_ZOOM} aria-label="Zoom map in">
+        <button
+          type="button"
+          onClick={() => onZoom(Math.min(MAX_ZOOM, zoom + 1))}
+          disabled={zoom >= MAX_ZOOM}
+          aria-label="Zoom map in"
+        >
           <PlusIcon size={19} />
         </button>
-        <button type="button" onClick={() => onZoom(Math.max(MIN_ZOOM, zoom - 1))}
-          disabled={zoom <= MIN_ZOOM} aria-label="Zoom map out">
+        <button
+          type="button"
+          onClick={() => onZoom(Math.max(MIN_ZOOM, zoom - 1))}
+          disabled={zoom <= MIN_ZOOM}
+          aria-label="Zoom map out"
+        >
           <MinusIcon size={19} />
         </button>
       </div>

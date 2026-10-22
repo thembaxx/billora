@@ -91,14 +91,16 @@ export function PropertyForm({
           </button>
           {coordinates && (
             <small className="geo-coordinates">
-              Pin saved for this property · {coordinates.lat.toFixed(5)}, {coordinates.lng.toFixed(5)}
+              Pin saved for this property · {coordinates.lat.toFixed(5)},{' '}
+              {coordinates.lng.toFixed(5)}
             </small>
           )}
           {placeOpen && (
             <PlaceExplorer
               onChoose={(place) => {
                 setCoordinates({ lat: place.lat, lng: place.lng });
-                if (!place.label.startsWith('Pinned location')) setAddress(place.label.slice(0, 160));
+                if (!place.label.startsWith('Pinned location'))
+                  setAddress(place.label.slice(0, 160));
                 setPlaceOpen(false);
               }}
             />

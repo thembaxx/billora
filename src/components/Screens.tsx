@@ -70,38 +70,40 @@ export function Properties({
         <section className="card geo-properties-panel">
           <PlaceExplorer properties={rows} onProperty={onProperty} />
           <p className="small-note">
-            Only properties with a saved map pin appear as markers. Sample addresses have not
-            been geocoded, and Billora never sends your saved addresses to search automatically.
+            Only properties with a saved map pin appear as markers. Sample addresses have not been
+            geocoded, and Billora never sends your saved addresses to search automatically.
           </p>
         </section>
       )}
-      {!mapView && <div className="property-grid">
-        {rows.map((p) => (
-          <PropertyCard
-            large
-            key={p.id}
-            property={p}
-            statement={latest.find((s) => s.propertyId === p.id)}
-            hidden={settings.hideBalances}
-            onClick={() => onProperty(p)}
-          />
-        ))}
-        <button className="add-property-tile" onClick={onAdd}>
-          <span>
-            <PlusIcon size={26} />
-          </span>
-          <h2>Room for one more.</h2>
-          <p>
-            Add a home, rental or business property.
-            <br />
-            Make the whole picture a little clearer.
-          </p>
-          <span className="text-button">
-            Add a property
-            <ArrowUpRightIcon />
-          </span>
-        </button>
-      </div>}
+      {!mapView && (
+        <div className="property-grid">
+          {rows.map((p) => (
+            <PropertyCard
+              large
+              key={p.id}
+              property={p}
+              statement={latest.find((s) => s.propertyId === p.id)}
+              hidden={settings.hideBalances}
+              onClick={() => onProperty(p)}
+            />
+          ))}
+          <button className="add-property-tile" onClick={onAdd}>
+            <span>
+              <PlusIcon size={26} />
+            </span>
+            <h2>Room for one more.</h2>
+            <p>
+              Add a home, rental or business property.
+              <br />
+              Make the whole picture a little clearer.
+            </p>
+            <span className="text-button">
+              Add a property
+              <ArrowUpRightIcon />
+            </span>
+          </button>
+        </div>
+      )}
       <RequestEntry requests={data.requests} onOpen={onRequests} />
       <div className="demo-entry demo-entry-wide">
         <div>

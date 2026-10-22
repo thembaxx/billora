@@ -11,7 +11,11 @@ export function GeoCompass({ reduced = false }: { reduced?: boolean }) {
     if (!el) return;
     let renderer: THREE.WebGLRenderer;
     try {
-      renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'low-power' });
+      renderer = new THREE.WebGLRenderer({
+        alpha: true,
+        antialias: true,
+        powerPreference: 'low-power',
+      });
     } catch {
       setFallback(true);
       return;
@@ -32,10 +36,14 @@ export function GeoCompass({ reduced = false }: { reduced?: boolean }) {
     const model = new THREE.Group();
     scene.add(model);
     const copper = new THREE.MeshStandardMaterial({
-      color: 0xeb6545, metalness: 0.28, roughness: 0.3,
+      color: 0xeb6545,
+      metalness: 0.28,
+      roughness: 0.3,
     });
     const pale = new THREE.MeshStandardMaterial({
-      color: 0xf4c396, metalness: 0.25, roughness: 0.45,
+      color: 0xf4c396,
+      metalness: 0.25,
+      roughness: 0.45,
     });
     const ring = new THREE.Mesh(new THREE.TorusGeometry(1.18, 0.045, 10, 96), copper);
     ring.rotation.x = Math.PI / 3.2;
@@ -51,7 +59,12 @@ export function GeoCompass({ reduced = false }: { reduced?: boolean }) {
     model.add(dot);
     let raf = 0;
     let active = true;
-    const observer = new IntersectionObserver(([entry]) => { active = entry.isIntersecting; }, { threshold: 0.02 });
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        active = entry.isIntersecting;
+      },
+      { threshold: 0.02 },
+    );
     observer.observe(el);
     const draw = () => {
       raf = requestAnimationFrame(draw);
