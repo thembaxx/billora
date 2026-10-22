@@ -86,7 +86,7 @@ export function PlaceExplorer({
         setError(reason instanceof Error ? reason.message : 'Could not search right now.');
       }
     } finally {
-      if (!controller.signal.aborted) setSearching(false);
+      setSearching(false);
     }
   }
 

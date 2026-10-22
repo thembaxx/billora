@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type PointerEvent } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { MinusIcon, PlusIcon, MapPinIcon } from '@phosphor-icons/react';
 import {
   geoAtScreen, panMap, screenPoint, visibleTiles, validPoint,
@@ -82,7 +82,7 @@ export function LiveMap({
     }
   }
 
-  function keyDown(event: React.KeyboardEvent<HTMLDivElement>) {
+  function keyDown(event: KeyboardEvent<HTMLDivElement>) {
     const delta = 70;
     if (event.key === 'ArrowLeft') onCenter(panMap(center, zoom, delta, 0));
     else if (event.key === 'ArrowRight') onCenter(panMap(center, zoom, -delta, 0));
