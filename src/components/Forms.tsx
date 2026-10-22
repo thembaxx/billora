@@ -4,6 +4,7 @@ import {
   ArrowRightIcon,
   CheckCircleIcon,
   FilePdfIcon,
+  MapPinIcon,
   ShieldCheckIcon,
   UploadSimpleIcon,
   WarningCircleIcon,
@@ -11,6 +12,7 @@ import {
 import type { Municipality, Property, Statement, Workspace } from '../types';
 import { deleteDocument, extractPDF, saveDocument } from '../lib/documents';
 import { Modal } from './Modal';
+import { PlaceExplorer } from './PlaceExplorer';
 
 export function PropertyForm({
   onClose,
@@ -20,6 +22,9 @@ export function PropertyForm({
   onSave: (p: Property) => boolean;
 }) {
   const [error, setError] = useState('');
+  const [address, setAddress] = useState('');
+  const [placeOpen, setPlaceOpen] = useState(false);
+  const [coordinates, setCoordinates] = useState<Property['location']>();
   const submit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
@@ -30,6 +35,7 @@ export function PropertyForm({
       municipality: form.get('municipality') as Municipality,
       account: String(form.get('account')).trim(),
       kind: form.get('kind') as Property['kind'],
+      ...(coordinates ? { location: coordinates } : {}),
     };
     if (!property.name || !property.address) {
       setError('Add a property name and address to continue.');
@@ -46,6 +52,7 @@ export function PropertyForm({
       title="Make room for your place."
       description="Add the details once. Keep the whole picture together."
       onClose={onClose}
+      wide={placeOpen}
     >
       <form onSubmit={submit} className="form-stack">
         <label>
@@ -60,8 +67,45 @@ export function PropertyForm({
         </label>
         <label>
           Street address
-          <input name="address" required maxLength={160} placeholder="24 Sixth Avenue, Parkhurst" />
+          <input
+            name="address"
+            required
+            maxLength={160}
+            placeholder="24 Sixth Avenue, Parkhurst"
+            value={address}
+            onChange={(event) => {
+              setAddress(event.target.value);
+              setCoordinates(undefined);
+            }}
+          />
         </label>
+        <div className="geo-property-picker">
+          <button
+            type="button"
+            className="button secondary"
+            aria-expanded={placeOpen}
+            onClick={() => setPlaceOpen((open) => !open)}
+          >
+            <MapPinIcon size={19} />
+            {placeOpen ? 'Close map' : 'Find this property on a map'}
+          </button>
+          {coordinates && (
+            <small className="geo-coordinates">
+              Pin saved for this property · {coordinates.lat.toFixed(5)},{' '}
+              {coordinates.lng.toFixed(5)}
+            </small>
+          )}
+          {placeOpen && (
+            <PlaceExplorer
+              onChoose={(place) => {
+                setCoordinates({ lat: place.lat, lng: place.lng });
+                if (!place.label.startsWith('Pinned location'))
+                  setAddress(place.label.slice(0, 160));
+                setPlaceOpen(false);
+              }}
+            />
+          )}
+        </div>
         <div className="form-columns">
           <label>
             Municipality

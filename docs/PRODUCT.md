@@ -27,3 +27,12 @@ Cloud profiles and authorised municipal connector flows are local demonstrations
 ## Next integration milestone
 
 Validate whether consumers return to import a second statement. Then investigate authorised bill presentment with municipal providers and payment networks. Public municipal finance datasets must never be represented as private household balances. A future server implementation needs verified identities, property permissions, encrypted document storage and an explicit document-retention policy.
+
+## Location explorer and map (October 2026)
+
+- A dedicated Properties card/map view and optional map-assisted property creation preserve the four-tab navigation.
+- The browser requests only visible OpenStreetMap tiles; no background tile downloads, prefetching, service-worker pre-caching, or offline map promises.
+- Search requires the user's explicit submit action and queries Nominatim with South African results. No autocomplete. The public Nominatim server has strict rate limits, no SLA, and is unsuitable for significant scale; use a properly identified hosted provider or own service before commercial rollout.
+- Geolocation permission is requested exclusively by an explicit button. Browser device coordinates remain ephemeral, whereas a user-confirmed property map pin is saved to local workspace metadata. Saving pinned coordinates does not verify municipal property identity or ownership.
+- The WebGL compass is decorative, uses existing Three.js, and respects reduced motion and visibility. Fallback remains functional with WebGL unavailable.
+- The map is an online enhancement. The rest of the local PWA, manual address form and property lists remain usable without map data.
