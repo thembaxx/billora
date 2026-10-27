@@ -147,6 +147,7 @@ test('full ZIP export restores an original PDF and request evidence', async ({ p
   await expect(page.locator('.request-file-list')).toContainText('evidence.pdf');
   await page.getByRole('button', { name: 'Close dialog' }).click();
   await page.getByRole('button', { name: 'Open settings' }).click();
+  await page.getByLabel('Password-protect full backup').uncheck();
   const saving = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Full backup (ZIP including files)' }).click();
   const archive = await saving;

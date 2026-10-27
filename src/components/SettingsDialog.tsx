@@ -35,8 +35,8 @@ export function SettingsDialog({
   onInstall: () => void;
   installAvailable: boolean;
   onExport: () => void;
-  onBackup: () => Promise<void>;
-  onRestore: (file: File) => Promise<void>;
+  onBackup: (password?: string) => Promise<void>;
+  onRestore: (file: File, password?: string) => Promise<void>;
   onPersonal: () => void;
   sampleWorkspace: boolean;
   onClear: () => Promise<void>;
@@ -45,6 +45,12 @@ export function SettingsDialog({
   onRequests: () => void;
   offline: boolean;
 }) {
+  const [protect, setProtect] = useState(true);
+  const [password, setPassword] = useState('');
+  const [confirmation, setConfirmation] = useState('');
+  const [restorePassword, setRestorePassword] = useState('');
+  const [backupBusy, setBackupBusy] = useState(false);
+  const [backupError, setBackupError] = useState('');
   const [clear, setClear] = useState(false);
   const [name, setName] = useState(settings.name);
   const [restoreFile, setRestoreFile] = useState<File | null>(null);
@@ -140,8 +146,9 @@ export function SettingsDialog({
             <ShieldCheckIcon size={17} />
             Your data and original PDFs are stored in this browser on this device. There is no cloud
             sync or account login. Service requests, notes and evidence are also local. Export
-            records and keep copies of your PDFs before clearing browser data. Downloads are not
-            encrypted.
+            records and keep copies of your PDFs before clearing browser data. Full backups are
+            password-protected by default. Plain ZIP backups, account JSON and service-request
+            exports are unencrypted; keep those downloads private.
           </p>
           {sampleWorkspace && (
             <button className="settings-action" onClick={onPersonal}>
@@ -149,35 +156,106 @@ export function SettingsDialog({
               Start an empty personal workspace
             </button>
           )}
-          <button className="settings-action" onClick={() => void onBackup()}>
+          <label className="check-label">
+            <input
+              type="checkbox"
+              checked={protect}
+              onChange={(event) => setProtect(event.target.checked)}
+            />
+            Password-protect full backup
+          </label>
+          {protect && (
+            <>
+              <label>
+                Backup password (12 characters minimum)
+                <input
+                  type="password"
+                  autoComplete="new-password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                />
+              </label>
+              <label>
+                Confirm backup password
+                <input
+                  type="password"
+                  autoComplete="new-password"
+                  value={confirmation}
+                  onChange={(event) => setConfirmation(event.target.value)}
+                />
+              </label>
+              <p>Keep the password separately. Billora cannot recover it.</p>
+            </>
+          )}
+          <p role="alert">{backupError}</p>
+          <button
+            className="settings-action"
+            disabled={
+              backupBusy || (protect && (password.length < 12 || password !== confirmation))
+            }
+            onClick={() => {
+              setBackupBusy(true);
+              setBackupError('');
+              void onBackup(protect ? password : undefined)
+                .catch(() => setBackupError('Backup could not be created.'))
+                .finally(() => setBackupBusy(false));
+            }}
+          >
             <ArrowDownIcon />
-            Full backup (ZIP including files)
+            {backupBusy
+              ? 'Preparing backup…'
+              : protect
+                ? 'Download encrypted full backup'
+                : 'Full backup (ZIP including files)'}
             <ArrowUpRightIcon />
           </button>
           <input
             ref={fileInput}
             type="file"
-            accept=".zip,application/zip"
+            accept=".billora,.zip,application/zip,application/octet-stream"
             className="sr-only"
             aria-label="Choose a Billora full backup"
             onChange={selectRestore}
           />
           <button className="settings-action" onClick={() => fileInput.current?.click()}>
             <ArrowUpRightIcon />
-            Restore full backup (ZIP)
+            Restore full backup (.billora or ZIP)
           </button>
           {restoreFile && (
             <div className="delete-section">
               <p>
                 Restore {restoreFile.name}? This replaces your current workspace, original PDFs,
-                requests and evidence. Download a backup first. ZIP files are not encrypted.
-                Preferences and demo connections are not restored.
+                requests and evidence. Download a backup first. Encrypted backups require their
+                original password; legacy ZIP files are unencrypted. Preferences and demo
+                connections are not restored.
               </p>
+              <label>
+                Backup password (encrypted files only)
+                <input
+                  type="password"
+                  autoComplete="current-password"
+                  value={restorePassword}
+                  onChange={(event) => setRestorePassword(event.target.value)}
+                />
+              </label>
               <div>
-                <button className="button secondary" onClick={() => setRestoreFile(null)}>
+                <button
+                  className="button secondary"
+                  disabled={backupBusy}
+                  onClick={() => setRestoreFile(null)}
+                >
                   Cancel restore
                 </button>
-                <button className="button danger" onClick={() => void onRestore(restoreFile)}>
+                <button
+                  className="button danger"
+                  disabled={backupBusy}
+                  onClick={() => {
+                    setBackupBusy(true);
+                    void onRestore(restoreFile, restorePassword).finally(() =>
+                      setBackupBusy(false),
+                    );
+                  }}
+                >
                   Confirm restore
                 </button>
               </div>
