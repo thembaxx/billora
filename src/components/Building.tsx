@@ -135,6 +135,24 @@ export default function Building({
       const p = box(0.7, 0.04, 1, -0.85 + i * 0.83, 3.58, -0.2, mats.frame);
       p.rotation.x = -0.15;
     }
+    // Original minimal street dressing keeps the existing apartment as the focus.
+    // The props are illustrative and do not correspond to a real address.
+    const streetMat = new THREE.MeshStandardMaterial({ color: '#6f7975', roughness: 1 });
+    const pavement = new THREE.MeshStandardMaterial({ color: '#dad2c6', roughness: 0.94 });
+    box(5.7, 0.06, 0.72, 0, -0.13, 2.3, pavement);
+    box(5.7, 0.055, 0.82, 0, -0.16, 3.06, streetMat);
+    for (const x of [-1.9, -.65, .65, 1.9]) {
+      box(.42, .008, .025, x, -.126, 3.06, mats.slab);
+    }
+    for (const x of [-2.48, 2.48]) {
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(.045, .06, .55, 8), mats.timber);
+      trunk.position.set(x, .21, 2.12);
+      model.add(trunk);
+      const crown = new THREE.Mesh(new THREE.IcosahedronGeometry(.31, 1), mats.leaf);
+      crown.position.set(x, .65, 2.12);
+      crown.castShadow = true;
+      model.add(crown);
+    }
     const ground = new THREE.Mesh(
       new THREE.CircleGeometry(4, 64),
       new THREE.ShadowMaterial({ opacity: 0.17 }),
