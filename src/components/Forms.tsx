@@ -1,3 +1,4 @@
+import { recogniseScannedPDF } from '../lib/local-ocr';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
@@ -174,6 +175,52 @@ export function ImportForm({
   onAddProperty: () => void;
   initialFile?: File;
 }) {
+  const [ocrStatus, setOcrStatus] = useState('');
+  const [ocrBusy, setOcrBusy] = useState(false);
+  const ocrController = useRef<AbortController | null>(null);
+  const ocrGeneration = useRef(0);
+  useEffect(
+    () => () => {
+      ocrController.current?.abort();
+      ocrGeneration.current++;
+    },
+    [],
+  );
+  async function runOCR() {
+    if (!file || ocrBusy) return;
+    const generation = ++ocrGeneration.current;
+    const controller = new AbortController();
+    ocrController.current = controller;
+    setOcrBusy(true);
+    setError('');
+    try {
+      const result = await recogniseScannedPDF(file, {
+        signal: controller.signal,
+        onProgress: (progress) => {
+          if (generation === ocrGeneration.current)
+            setOcrStatus(`${progress.status} · ${Math.round(progress.progress * 100)}%`);
+        },
+      });
+      if (generation !== ocrGeneration.current) return;
+      setText(result.text);
+      setSuggestions(suggestStatementFields(result.text));
+      setNotice(
+        `OCR read ${result.pages.length} page(s) on this device${result.truncated ? '; later pages were not read' : ''}. Suggestions are unverified: check the quoted page and all figures against your original PDF.`,
+      );
+    } catch (failure) {
+      if (generation === ocrGeneration.current)
+        setNotice(
+          failure instanceof Error && failure.name === 'AbortError'
+            ? 'OCR cancelled. Manual entry remains available.'
+            : 'OCR could not finish. Enter the figures manually; your original PDF is retained.',
+        );
+    } finally {
+      if (generation === ocrGeneration.current) {
+        setOcrBusy(false);
+        setOcrStatus('');
+      }
+    }
+  }
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -191,6 +238,10 @@ export function ImportForm({
   const once = useRef(false);
   async function accept(incoming?: File) {
     if (!incoming) return;
+    ocrController.current?.abort();
+    ocrGeneration.current++;
+    setOcrBusy(false);
+    setOcrStatus('');
     setError('');
     setNotice('');
     if (incoming.size > 15 * 1024 * 1024) {
@@ -386,6 +437,33 @@ export function ImportForm({
               <WarningCircleIcon size={18} />
               {notice}
             </p>
+          )}
+          {file && !text.trim() && (
+            <section className="note-box" aria-label="Scanned statement recognition">
+              <strong>Read a scanned bill on this device</strong>
+              <p>
+                Optional OCR downloads an English language model on first use. It reads up to five
+                pages locally. Your PDF is not uploaded. Check every suggested value before saving.
+              </p>
+              <button
+                type="button"
+                className="button secondary"
+                disabled={busy || ocrBusy}
+                onClick={() => void runOCR()}
+              >
+                Download OCR tools and read scan
+              </button>
+              {ocrBusy && (
+                <button
+                  type="button"
+                  className="button secondary"
+                  onClick={() => ocrController.current?.abort()}
+                >
+                  Cancel OCR
+                </button>
+              )}
+              <p role="status">{ocrStatus}</p>
+            </section>
           )}
           {Object.keys(suggestions).length > 0 && (
             <section className="note-box suggestion-review" aria-label="Suggested PDF fields">

@@ -1,3 +1,4 @@
+import { encryptBackup, decryptBackup, isEncryptedBackup } from './lib/encrypted-backup';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, MotionConfig, motion, useReducedMotion } from 'motion/react';
 import { gsap } from 'gsap';
@@ -618,18 +619,32 @@ export default function App() {
               notify('Your personal workspace is ready. Sample bills are no longer included.');
             }
           }}
-          onBackup={async () => {
+          onBackup={async (password) => {
             try {
               const blob = await createFullBackup(data);
-              download(blob, 'billora-complete-backup.zip', 'application/zip');
-              notify('Complete ZIP backup downloaded. Keep this unencrypted file secure.');
+              const secured = password ? await encryptBackup(blob, password) : blob;
+              download(
+                secured,
+                password ? 'billora-complete-backup.billora' : 'billora-complete-backup.zip',
+                secured.type,
+              );
+              notify(
+                password
+                  ? 'Password-protected backup downloaded. Keep its password separately; it cannot be recovered.'
+                  : 'Unencrypted ZIP downloaded. Keep this file private.',
+              );
             } catch (error) {
               notify(error instanceof Error ? error.message : 'Could not create full backup.');
             }
           }}
-          onRestore={async (file) => {
+          onRestore={async (file, password) => {
             try {
-              const restored = await restoreFullBackup(file, dataRef.current);
+              const original = (await isEncryptedBackup(file))
+                ? new File([await decryptBackup(file, password || '')], 'restored.zip', {
+                    type: 'application/zip',
+                  })
+                : file;
+              const restored = await restoreFullBackup(original, dataRef.current);
               dataRef.current = restored;
               setData(restored);
               navigate('overview');
