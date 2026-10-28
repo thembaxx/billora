@@ -2,7 +2,7 @@
 
 Verified on 28 October 2026 against the local production build for this change. Hosted deployment and release verification were skipped at the user's request.
 
-Environment: Node.js 24.19.0, npm 11.9.0 and Chromium 154.0.8037.57 on Linux. Browser tests used `http://127.0.0.1:3102`, a strict preview port and one worker.
+Initial full-suite environment: Node.js 24.19.0, npm 11.9.0 and Chromium 154.0.8037.57 on Linux. Browser tests used `http://127.0.0.1:3102`, a strict preview port and one worker.
 
 | Check                                                                 | Result                                                                                |
 | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
@@ -13,6 +13,14 @@ Environment: Node.js 24.19.0, npm 11.9.0 and Chromium 154.0.8037.57 on Linux. Br
 | `git diff --check`                                                    | Passed.                                                                               |
 
 The build reports large JavaScript chunks and an ineffective dynamic import because `fflate` is also statically imported. These warnings remain; this run does not claim a bundle-size or performance improvement.
+
+## Chromium 156 follow-up
+
+[CI run 40688839564](https://github.com/thembaxx/billora/actions/runs/40688839564/job/122818131259) passed 22 of 23 tests and reported one map-button contrast failure with Playwright's bundled Chrome 156. The map footer has a staggered GSAP opacity entrance. The audit sampled its enabled button during that fade, before its final colours; the settled ink/surface contrast is 13.26:1.
+
+The map accessibility test now explicitly waits for the footer's final opacity before running the same Axe rules. No product CSS or accessibility rule was changed. The focused `map stays accessible at mobile sizes and offers a truthful offline fallback` test then passed with **Google Chrome for Testing 156.0.8078.4**, one worker, in 8.8 seconds, with zero Axe findings. This run used a temporary copy of the repository's Playwright settings with the system Chromium executable override omitted, so the bundled browser was selected. Lint, format and diff checks also passed again.
+
+The initial full local suite above used Chromium 154; this follow-up reran only the affected map test with Chromium 156.
 
 ## What the tests prove
 

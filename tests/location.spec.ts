@@ -120,6 +120,8 @@ test('map stays accessible at mobile sizes and offers a truthful offline fallbac
   await page.keyboard.press('ArrowRight');
   await page.keyboard.press('Enter');
   await expect(page.getByText('Your selected place')).toBeVisible();
+  // GSAP staggers this footer after the map. Audit its final colours after the fade.
+  await expect(page.locator('.geo-location-footer')).toHaveCSS('opacity', '1');
   const accessibility = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
   console.log(
     'Location axe findings',
