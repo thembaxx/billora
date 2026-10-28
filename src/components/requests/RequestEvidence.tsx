@@ -64,13 +64,17 @@ export function RequestEvidence({
     setBusy(true);
     onBusy(true);
     try {
-      await deleteRequestFile(id);
-      onMutate(request.id, (current) => ({
+      const saved = onMutate(request.id, (current) => ({
         ...current,
         confirmed: false,
         status: 'draft',
         evidence: current.evidence.filter((f) => f.id !== id),
       }));
+      if (!saved) {
+        setError('The evidence link could not be updated. The original file has been kept.');
+        return;
+      }
+      await deleteRequestFile(id);
     } catch {
       setError('The evidence file could not be removed. Please try again.');
     } finally {

@@ -1,7 +1,13 @@
 import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
 import type { Workspace } from '../types';
-import { readDocument, saveDocument, clearDocuments } from './documents';
-import { readRequestFile, saveRequestFile, clearRequestFiles } from './request-files';
+import { parseWorkspace } from './workspace';
+import { readDocument, saveDocument, clearDocuments, documentEntries } from './documents';
+import {
+  readRequestFile,
+  saveRequestFile,
+  clearRequestFiles,
+  requestFileEntries,
+} from './request-files';
 
 interface Archive {
   version: 2;
@@ -14,7 +20,14 @@ const limit = 120 * 1024 * 1024;
 
 function ids(data: Workspace) {
   return {
-    originals: [...new Set(data.statements.flatMap((s) => (s.fileId ? [s.fileId] : [])))],
+    originals: [
+      ...new Set(
+        [
+          ...data.statements.map((s) => s.fileId),
+          ...data.requests.flatMap((r) => [r.statement?.fileId, r.comparison?.previous.fileId]),
+        ].filter((id): id is string => !!id),
+      ),
+    ],
     evidence: [...new Set(data.requests.flatMap((r) => r.evidence.map((f) => f.id)))],
   };
 }
@@ -67,46 +80,7 @@ function validate(raw: unknown, files: Record<string, Uint8Array>): Archive {
     !Array.isArray(archive.evidence)
   )
     throw new Error('Unsupported or incomplete Billora backup.');
-  if (
-    archive.workspace.properties.length > 10000 ||
-    archive.workspace.statements.length > 100000 ||
-    archive.workspace.requests.length > 100000
-  )
-    throw new Error('Backup record count exceeds safety limits.');
-  if (
-    archive.workspace.properties.some(
-      (p) =>
-        !p ||
-        typeof p.id !== 'string' ||
-        typeof p.name !== 'string' ||
-        typeof p.address !== 'string' ||
-        typeof p.municipality !== 'string',
-    ) ||
-    archive.workspace.statements.some(
-      (statement) =>
-        !statement ||
-        typeof statement.id !== 'string' ||
-        typeof statement.propertyId !== 'string' ||
-        typeof statement.period !== 'string' ||
-        typeof statement.dueDate !== 'string' ||
-        !Number.isFinite(statement.amount) ||
-        !statement.categories ||
-        ['electricity', 'water', 'rates', 'services'].some(
-          (key) => !Number.isFinite(statement.categories[key as keyof typeof statement.categories]),
-        ),
-    ) ||
-    archive.workspace.requests.some(
-      (request) =>
-        !request ||
-        typeof request.id !== 'string' ||
-        typeof request.propertyId !== 'string' ||
-        !request.property ||
-        !Array.isArray(request.evidence) ||
-        !Array.isArray(request.events) ||
-        request.evidence.some((item) => !item || typeof item.id !== 'string'),
-    )
-  )
-    throw new Error('Backup contains invalid workspace records.');
+  archive.workspace = parseWorkspace(archive.workspace);
   const expected = ids(archive.workspace);
   for (const [kind, refs] of [
     ['originals', archive.originals],
@@ -129,7 +103,7 @@ function validate(raw: unknown, files: Record<string, Uint8Array>): Archive {
   return archive;
 }
 
-export async function restoreFullBackup(file: File, current: Workspace): Promise<Workspace> {
+export async function restoreFullBackup(file: File): Promise<Workspace> {
   if (!/\.zip$/i.test(file.name) || file.size > limit)
     throw new Error('Choose a Billora ZIP under 120 MB.');
   const bytes = new Uint8Array(await file.arrayBuffer());
@@ -149,8 +123,13 @@ export async function restoreFullBackup(file: File, current: Workspace): Promise
     throw new Error('Decompressed backup exceeds 120 MB.');
   if (!files['billora-backup.json']) throw new Error('Not a Billora full backup.');
   const archive = validate(JSON.parse(strFromU8(files['billora-backup.json'])), files);
-  // Keep the old files in memory until replacement succeeds, then restore on any failure.
-  const old = await collect(current);
+  // Recovery must preserve exact saved bytes and all files, even when metadata is unreadable
+  // or some file references are missing. Snapshot before touching either store.
+  const previousRaw = localStorage.getItem('billora-workspace');
+  const [previousDocuments, previousEvidence] = await Promise.all([
+    documentEntries(),
+    requestFileEntries(),
+  ]);
   try {
     await clearDocuments();
     await clearRequestFiles();
@@ -167,15 +146,12 @@ export async function restoreFullBackup(file: File, current: Workspace): Promise
     try {
       await clearDocuments();
       await clearRequestFiles();
-      const snapshot = validate(JSON.parse(strFromU8(old['billora-backup.json'])), old);
-      for (const item of snapshot.originals)
-        await saveDocument(
-          item.id,
-          new Blob([new Uint8Array(old[item.path])], { type: 'application/pdf' }),
-        );
-      for (const item of snapshot.evidence)
-        await saveRequestFile(item.id, new Blob([new Uint8Array(old[item.path])]));
-      localStorage.setItem('billora-workspace', JSON.stringify(current));
+      for (const [id, blob] of previousDocuments) await saveDocument(id, blob);
+      for (const [id, blob] of previousEvidence) await saveRequestFile(id, blob);
+      if (localStorage.getItem('billora-workspace') !== previousRaw) {
+        if (previousRaw === null) localStorage.removeItem('billora-workspace');
+        else localStorage.setItem('billora-workspace', previousRaw);
+      }
     } catch {
       throw new Error(
         'Restore failed, and automatic rollback was incomplete. Your original export may be needed.',

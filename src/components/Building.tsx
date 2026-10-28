@@ -141,15 +141,15 @@ export default function Building({
     const pavement = new THREE.MeshStandardMaterial({ color: '#dad2c6', roughness: 0.94 });
     box(5.7, 0.06, 0.72, 0, -0.13, 2.3, pavement);
     box(5.7, 0.055, 0.82, 0, -0.16, 3.06, streetMat);
-    for (const x of [-1.9, -.65, .65, 1.9]) {
-      box(.42, .008, .025, x, -.126, 3.06, mats.slab);
+    for (const x of [-1.9, -0.65, 0.65, 1.9]) {
+      box(0.42, 0.008, 0.025, x, -0.126, 3.06, mats.slab);
     }
     for (const x of [-2.48, 2.48]) {
-      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(.045, .06, .55, 8), mats.timber);
-      trunk.position.set(x, .21, 2.12);
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.06, 0.55, 8), mats.timber);
+      trunk.position.set(x, 0.21, 2.12);
       model.add(trunk);
-      const crown = new THREE.Mesh(new THREE.IcosahedronGeometry(.31, 1), mats.leaf);
-      crown.position.set(x, .65, 2.12);
+      const crown = new THREE.Mesh(new THREE.IcosahedronGeometry(0.31, 1), mats.leaf);
+      crown.position.set(x, 0.65, 2.12);
       crown.castShadow = true;
       model.add(crown);
     }
