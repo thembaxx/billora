@@ -7,6 +7,7 @@ import {
   requestEvent,
   requestKinds,
   requestLetter,
+  statementReference,
   type RequestMutation,
 } from '../../lib/requests';
 import { RequestEvidence } from './RequestEvidence';
@@ -99,6 +100,7 @@ export function RequestEditor({
                         municipality: p.municipality,
                       },
                       statement: undefined,
+                      comparison: undefined,
                       checked: [],
                     });
                 }}
@@ -173,16 +175,8 @@ export function RequestEditor({
                 onChange={(e) => {
                   const s = data.statements.find((s) => s.id === e.target.value);
                   patch({
-                    statement: s
-                      ? {
-                          id: s.id,
-                          period: s.period,
-                          amount: s.amount,
-                          source: s.source,
-                          fileId: s.fileId,
-                          fileName: s.fileName,
-                        }
-                      : undefined,
+                    statement: s ? statementReference(s) : undefined,
+                    comparison: undefined,
                   });
                 }}
               >
@@ -198,6 +192,13 @@ export function RequestEditor({
               </select>
             </label>
           </div>
+          {r.comparison && (
+            <p className="request-help">
+              Comparison evidence: {r.comparison.previous.period} → {r.statement?.period}. Both
+              original PDFs and a comparison record are included when saved. Changing the related
+              statement removes this comparison.
+            </p>
+          )}
           {r.statement && (
             <p className="request-help">
               {r.statement.source === 'sample'

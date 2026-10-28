@@ -98,8 +98,9 @@ export function RequestDetail({
       )}
       <p className="request-help">
         The ZIP includes a letter draft, a readable case record, linked statement PDF if available,
-        and attached evidence. Review personal information before sharing. This request pack is not
-        a workspace backup, and Billora does not submit it.
+        comparison figures and both saved PDFs for comparison queries, and attached evidence. Review
+        personal information before sharing. This request pack is not a workspace backup, and
+        Billora does not submit it.
       </p>
       <RequestTracking request={r} onMutate={onMutate} notify={notify} />
       <div className="request-delete">

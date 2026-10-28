@@ -224,6 +224,16 @@ export function ImportForm({
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [reviewed, setReviewed] = useState(false);
+  const [originalUrl, setOriginalUrl] = useState('');
+  const extractionGeneration = useRef(0);
+  useEffect(
+    () => () => {
+      extractionGeneration.current++;
+    },
+    [],
+  );
   const [text, setText] = useState('');
   const [notice, setNotice] = useState('');
   const [manual, setManual] = useState(false);
@@ -236,45 +246,69 @@ export function ImportForm({
   const [selected, setSelected] = useState(data.properties[0]?.id || '');
   const picker = useRef<HTMLInputElement>(null);
   const once = useRef(false);
+  useEffect(() => {
+    if (!file) {
+      setOriginalUrl('');
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    setOriginalUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
   async function accept(incoming?: File) {
-    if (!incoming) return;
+    if (!incoming || saving) return;
+    const generation = ++extractionGeneration.current;
     ocrController.current?.abort();
     ocrGeneration.current++;
     setOcrBusy(false);
     setOcrStatus('');
     setError('');
     setNotice('');
-    if (incoming.size > 15 * 1024 * 1024) {
-      setError('Choose a PDF smaller than 15 MB.');
-      return;
-    }
-    const header = new TextDecoder().decode(
-      new Uint8Array(await incoming.slice(0, 5).arrayBuffer()),
-    );
-    if (!incoming.name.toLowerCase().endsWith('.pdf') || header !== '%PDF-') {
-      setError('Choose a valid PDF municipal statement.');
-      return;
-    }
-    setFile(incoming);
+    setFile(null);
+    setText('');
+    setSuggestions({});
+    setReviewed(false);
+    setAmountValue('');
+    setDue('');
+    setPeriod(new Date().toISOString().slice(0, 7));
+    setBreakdown({ electricity: '', water: '', rates: '' });
+    setCategoryReviewed(false);
     setManual(false);
     setBusy(true);
     try {
-      const result = await extractPDF(incoming);
-      setText(result);
-      setSuggestions(suggestStatementFields(result));
-      setNotice(
-        result.trim()
-          ? 'Text extracted on your device. Check the PDF and enter its figures below.'
-          : 'This looks like a scanned PDF. You can still save the original and enter its figures below.',
+      if (incoming.size > 15 * 1024 * 1024) throw new Error('Choose a PDF smaller than 15 MB.');
+      const header = new TextDecoder().decode(
+        new Uint8Array(await incoming.slice(0, 5).arrayBuffer()),
       );
-    } catch {
-      setText('');
-      setSuggestions({});
-      setNotice(
-        'We couldn’t extract text from this PDF. You can still save the original and enter its figures below.',
-      );
+      if (generation !== extractionGeneration.current) return;
+      if (!incoming.name.toLowerCase().endsWith('.pdf') || header !== '%PDF-')
+        throw new Error('Choose a valid PDF municipal statement.');
+      setFile(incoming);
+      try {
+        const result = await extractPDF(incoming);
+        if (generation !== extractionGeneration.current) return;
+        setText(result);
+        setSuggestions(suggestStatementFields(result));
+        setNotice(
+          result.trim()
+            ? 'Text extracted on your device. Open the original PDF and review its figures below.'
+            : 'This looks like a scanned PDF. You can still save the original and enter its figures below.',
+        );
+      } catch {
+        if (generation === extractionGeneration.current)
+          setNotice(
+            'We couldn’t extract text from this PDF. You can still save the original and enter its figures below.',
+          );
+      }
+    } catch (failure) {
+      if (generation === extractionGeneration.current)
+        setError(
+          failure instanceof Error
+            ? failure.message
+            : 'Could not read this file. Choose it again or enter the statement manually.',
+        );
     } finally {
-      setBusy(false);
+      if (generation === extractionGeneration.current) setBusy(false);
     }
   }
   // The native file handler supplies its file only once per mounted import form.
@@ -306,11 +340,16 @@ export function ImportForm({
       water: Number(form.get('water') || 0),
       rates: Number(form.get('rates') || 0),
     };
+    const categoryCents = Object.values(values).reduce(
+      (sum, value) => sum + Math.round(value * 100),
+      0,
+    );
+    const amountCents = Math.round(amount * 100);
     if (
       Object.values(values).some((v) => !Number.isFinite(v) || v < 0) ||
-      Object.values(values).reduce((a, v) => a + v, 0) > amount + 0.01
+      categoryCents > amountCents
     ) {
-      setError('The category amounts must be positive and add up to no more than the total.');
+      setError('The category amounts must be non-negative and add up to no more than the total.');
       return;
     }
     const statement: Statement = {
@@ -323,7 +362,7 @@ export function ImportForm({
       source: 'imported',
       categories: {
         ...values,
-        services: +(amount - Object.values(values).reduce((a, v) => a + v, 0)).toFixed(2),
+        services: (amountCents - categoryCents) / 100,
       },
       fileName: file?.name,
       extractedText: text,
@@ -341,7 +380,7 @@ export function ImportForm({
       );
       return;
     }
-    setBusy(true);
+    setSaving(true);
     try {
       if (file) {
         statement.fileId = statement.id;
@@ -355,14 +394,16 @@ export function ImportForm({
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not save this statement. Please try again.');
     } finally {
-      setBusy(false);
+      setSaving(false);
     }
   };
   return (
     <Modal
       title="Bring a little clarity."
       description="Import a statement. Keep the original. Review the details."
-      onClose={onClose}
+      onClose={() => {
+        if (!saving) onClose();
+      }}
       wide
     >
       {!data.properties.length || data.statements.some((s) => s.source === 'sample') ? (
@@ -385,11 +426,16 @@ export function ImportForm({
             accept="application/pdf,.pdf"
             className="sr-only"
             ref={picker}
-            onChange={(e) => void accept(e.target.files?.[0])}
+            disabled={saving || ocrBusy}
+            onChange={(e) => {
+              void accept(e.target.files?.[0]);
+              e.target.value = '';
+            }}
             aria-label="Select municipal PDF"
           />
           <motion.button
             type="button"
+            disabled={saving || ocrBusy}
             className={`upload-zone ${file ? 'has-file' : ''}`}
             whileHover={{ scale: 1.008 }}
             onClick={() => picker.current?.click()}
@@ -422,6 +468,12 @@ export function ImportForm({
               </motion.span>
             </AnimatePresence>
           </motion.button>
+          {file && originalUrl && (
+            <a className="text-button" href={originalUrl} target="_blank" rel="noreferrer">
+              Open original PDF for review <span className="sr-only">(opens in a new tab)</span>
+            </a>
+          )}
+          {busy && <p role="status">Reading your PDF on this device…</p>}
           {!file && (
             <label className="check-label">
               <input
@@ -487,6 +539,7 @@ export function ImportForm({
                   type="button"
                   className="button secondary small"
                   onClick={() => {
+                    setReviewed(false);
                     if (suggestions.period) setPeriod(suggestions.period.value);
                     if (suggestions.due) setDue(suggestions.due.value);
                     if (suggestions.amount) setAmountValue(suggestions.amount.value);
@@ -507,7 +560,13 @@ export function ImportForm({
           )}
           <label>
             Property
-            <select value={selected} onChange={(e) => setSelected(e.target.value)}>
+            <select
+              value={selected}
+              onChange={(e) => {
+                setSelected(e.target.value);
+                setReviewed(false);
+              }}
+            >
               {data.properties.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
@@ -523,7 +582,10 @@ export function ImportForm({
                 type="month"
                 required
                 value={period}
-                onChange={(e) => setPeriod(e.target.value)}
+                onChange={(e) => {
+                  setPeriod(e.target.value);
+                  setReviewed(false);
+                }}
                 min="2000-01"
                 max="2100-12"
               />
@@ -537,7 +599,10 @@ export function ImportForm({
                 min="2000-01-01"
                 max="2100-12-31"
                 value={due}
-                onChange={(e) => setDue(e.target.value)}
+                onChange={(e) => {
+                  setDue(e.target.value);
+                  setReviewed(false);
+                }}
               />
             </label>
           </div>
@@ -547,7 +612,10 @@ export function ImportForm({
               name="amount"
               type="number"
               value={amountValue}
-              onChange={(e) => setAmountValue(e.target.value)}
+              onChange={(e) => {
+                setAmountValue(e.target.value);
+                setReviewed(false);
+              }}
               min="0"
               max="100000000"
               step="0.01"
@@ -573,6 +641,7 @@ export function ImportForm({
                     placeholder="0.00"
                     value={breakdown[c as keyof typeof breakdown]}
                     onChange={(e) => {
+                      setReviewed(false);
                       setCategoryReviewed(true);
                       setBreakdown((prev) => ({ ...prev, [c]: e.target.value }));
                     }}
@@ -589,7 +658,12 @@ export function ImportForm({
             </details>
           )}
           <label className="check-label">
-            <input type="checkbox" required />
+            <input
+              type="checkbox"
+              required
+              checked={reviewed}
+              onChange={(e) => setReviewed(e.target.checked)}
+            />
             I’ve checked the total and due date against my statement.
           </label>
           <p className="small-note">
@@ -611,8 +685,12 @@ export function ImportForm({
               {error}
             </p>
           )}
-          <button className="button primary full" disabled={busy} type="submit">
-            {busy ? 'Processing on your device…' : 'Save reviewed statement'}
+          <button
+            className="button primary full"
+            disabled={busy || ocrBusy || saving}
+            type="submit"
+          >
+            {busy || saving ? 'Processing on your device…' : 'Save reviewed statement'}
             <ArrowRightIcon />
           </button>
         </form>

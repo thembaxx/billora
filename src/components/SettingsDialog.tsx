@@ -55,13 +55,19 @@ export function SettingsDialog({
   const [name, setName] = useState(settings.name);
   const [restoreFile, setRestoreFile] = useState<File | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
-  const selectRestore = (e: ChangeEvent<HTMLInputElement>) =>
+  const selectRestore = (e: ChangeEvent<HTMLInputElement>) => {
     setRestoreFile(e.target.files?.[0] || null);
+    setRestorePassword('');
+    setBackupError('');
+    e.target.value = '';
+  };
   return (
     <Modal
       title="Make Billora yours."
       description="A few thoughtful touches, just how you like them."
-      onClose={onClose}
+      onClose={() => {
+        if (!backupBusy) onClose();
+      }}
     >
       <div className="settings-body">
         <label className="setting-label">
@@ -151,7 +157,7 @@ export function SettingsDialog({
             exports are unencrypted; keep those downloads private.
           </p>
           {sampleWorkspace && (
-            <button className="settings-action" onClick={onPersonal}>
+            <button className="settings-action" disabled={backupBusy} onClick={onPersonal}>
               <ArrowUpRightIcon />
               Start an empty personal workspace
             </button>
@@ -197,7 +203,11 @@ export function SettingsDialog({
               setBackupBusy(true);
               setBackupError('');
               void onBackup(protect ? password : undefined)
-                .catch(() => setBackupError('Backup could not be created.'))
+                .catch((error: unknown) =>
+                  setBackupError(
+                    error instanceof Error ? error.message : 'Backup could not be created.',
+                  ),
+                )
                 .finally(() => setBackupBusy(false));
             }}
           >
@@ -212,12 +222,17 @@ export function SettingsDialog({
           <input
             ref={fileInput}
             type="file"
+            disabled={backupBusy}
             accept=".billora,.zip,application/zip,application/octet-stream"
             className="sr-only"
             aria-label="Choose a Billora full backup"
             onChange={selectRestore}
           />
-          <button className="settings-action" onClick={() => fileInput.current?.click()}>
+          <button
+            className="settings-action"
+            disabled={backupBusy}
+            onClick={() => fileInput.current?.click()}
+          >
             <ArrowUpRightIcon />
             Restore full backup (.billora or ZIP)
           </button>
@@ -251,9 +266,14 @@ export function SettingsDialog({
                   disabled={backupBusy}
                   onClick={() => {
                     setBackupBusy(true);
-                    void onRestore(restoreFile, restorePassword).finally(() =>
-                      setBackupBusy(false),
-                    );
+                    setBackupError('');
+                    void onRestore(restoreFile, restorePassword)
+                      .catch((error: unknown) =>
+                        setBackupError(
+                          error instanceof Error ? error.message : 'Could not restore this backup.',
+                        ),
+                      )
+                      .finally(() => setBackupBusy(false));
                   }}
                 >
                   Confirm restore
@@ -266,11 +286,11 @@ export function SettingsDialog({
             Export account data (JSON, no PDFs)
             <ArrowUpRightIcon />
           </button>
-          <button className="settings-action" onClick={onTour}>
+          <button className="settings-action" disabled={backupBusy} onClick={onTour}>
             Take the welcome tour
             <ArrowUpRightIcon />
           </button>
-          <button className="settings-action" onClick={onRequests}>
+          <button className="settings-action" disabled={backupBusy} onClick={onRequests}>
             Service requests &amp; follow-ups <ArrowUpRightIcon />
           </button>
           {clear ? (
@@ -284,13 +304,21 @@ export function SettingsDialog({
                 <button className="button secondary" onClick={() => setClear(false)}>
                   Keep my data
                 </button>
-                <button className="button danger" onClick={() => void onClear()}>
+                <button
+                  className="button danger"
+                  disabled={backupBusy}
+                  onClick={() => void onClear()}
+                >
                   Clear workspace
                 </button>
               </div>
             </div>
           ) : (
-            <button className="text-button muted" onClick={() => setClear(true)}>
+            <button
+              className="text-button muted"
+              disabled={backupBusy}
+              onClick={() => setClear(true)}
+            >
               Clear workspace & start fresh
             </button>
           )}
@@ -302,11 +330,14 @@ export function SettingsDialog({
             Try a demo cloud account and an authorised municipal connection flow. Every sync and
             balance is simulated on this device.
           </p>
-          <button className="text-button" onClick={onDemo}>
+          <button className="text-button" disabled={backupBusy} onClick={onDemo}>
             Explore cloud & municipal demo
             <ArrowUpRightIcon />
           </button>
         </section>
+        <a className="settings-action" href="/?help=1">
+          Help &amp; project notes <ArrowUpRightIcon />
+        </a>
         <section className="settings-legal" aria-labelledby="settings-legal-title">
           <h3 id="settings-legal-title">Privacy &amp; legal</h3>
           <p>Clear policies for this browser-local preview. Operator details are still pending.</p>

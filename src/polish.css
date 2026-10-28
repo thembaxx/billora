@@ -2127,3 +2127,31 @@ html[data-theme='dark'] .demo-disclosure {
     text-align: left;
   }
 }
+
+/* Help uses the workspace type, surfaces and spacing at every viewport. */
+.project-guide h3 {
+  margin: 0 0 0.75rem;
+}
+.project-guide p,
+.project-guide li {
+  color: var(--muted);
+  line-height: 1.65;
+}
+.project-guide ol {
+  padding-left: 1.5rem;
+}
+.project-guide li + li {
+  margin-top: 0.5rem;
+}
+.project-guide a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.project-guide section + section {
+  border-top: 1px solid var(--line);
+  padding-top: 1.5rem;
+}
+.recovery-banner .button {
+  margin: 0.5rem 0.5rem 0 0;
+}

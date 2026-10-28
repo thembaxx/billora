@@ -65,6 +65,14 @@ export const localDay = (date = new Date()) =>
 export function requestEvent(text: string) {
   return { id: crypto.randomUUID(), at: new Date().toISOString(), text };
 }
+export const statementReference = (s: Statement) => ({
+  id: s.id,
+  period: s.period,
+  amount: s.amount,
+  source: s.source,
+  fileId: s.fileId,
+  fileName: s.fileName,
+});
 export function newRequest(property: Property, statement?: Statement): ServiceRequest {
   const now = new Date().toISOString();
   return {
@@ -81,16 +89,7 @@ export function newRequest(property: Property, statement?: Statement): ServiceRe
     description: '',
     desiredOutcome: '',
     incidentDate: '',
-    statement: statement
-      ? {
-          id: statement.id,
-          period: statement.period,
-          amount: statement.amount,
-          source: statement.source,
-          fileId: statement.fileId,
-          fileName: statement.fileName,
-        }
-      : undefined,
+    statement: statement ? statementReference(statement) : undefined,
     evidence: [],
     checked: [],
     confirmed: false,
@@ -125,6 +124,13 @@ export function requestLetter(r: ServiceRequest, followUp = false, hideBalance =
           `Related statement: ${statement.period} · ${hideBalance ? 'Amount hidden' : money(statement.amount)} · ${statement.source === 'sample' ? 'ILLUSTRATIVE SAMPLE — not an actual bill' : 'user-reviewed import, not live verified data'}`,
         ]
       : []),
+    ...(r.comparison
+      ? [
+          `Previous statement: ${r.comparison.previous.period} · ${hideBalance ? 'Amount hidden' : money(r.comparison.previous.amount)} · ${r.comparison.previous.source === 'sample' ? 'ILLUSTRATIVE SAMPLE — not an actual bill' : 'user-reviewed import, not live verified data'}`,
+          `Comparison — ${r.comparison.label}: ${hideBalance ? 'Amounts hidden' : `${money(r.comparison.before)} → ${money(r.comparison.after)} (difference ${money(r.comparison.after - r.comparison.before)})`}`,
+          'Comparison is based on user-reviewed figures. It does not establish a billing error.',
+        ]
+      : []),
     ...(followUp && r.submission
       ? [
           '',
@@ -143,11 +149,14 @@ export function requestLetter(r: ServiceRequest, followUp = false, hideBalance =
     '',
     'Supporting evidence:',
     ...(statement?.fileId ? [`- Linked statement: ${statement.fileName || 'statement.pdf'}`] : []),
+    ...(r.comparison?.previous.fileId
+      ? [`- Previous statement: ${r.comparison.previous.fileName || 'previous-statement.pdf'}`]
+      : []),
     ...r.evidence.map((f) => `- ${f.name}`),
     ...requestKinds[r.kind].evidence
       .filter((e) => r.checked.includes(e.id))
       .map((e) => `- Checked by me: ${e.label}`),
-    ...(!r.evidence.length && !statement?.fileId
+    ...(!r.evidence.length && !statement?.fileId && !r.comparison?.previous.fileId
       ? ['No document files are attached. Add any evidence required by the official channel.']
       : []),
     '',
@@ -189,13 +198,39 @@ export async function requestPack(r: ServiceRequest): Promise<Blob> {
       'BILLORA REQUEST PACK\n\nNothing in this ZIP has been submitted by Billora. Review request-draft.txt, add your name/contact details, and confirm the official requirements before submitting through the municipality. The attachments contain personal information. Keep this ZIP secure.\n\nLocal status, evidence checks and timeline entries are recorded by the user, not verified by a municipality. The JSON is a readable record; automatic restore is not supported.\n',
     ),
   };
-  if (r.statement?.fileId) {
-    const pdf = await readDocument(r.statement.fileId);
+  if (r.comparison) {
+    files['comparison.json'] = strToU8(
+      JSON.stringify(
+        {
+          source:
+            r.statement?.source === 'imported' && r.comparison.previous.source === 'imported'
+              ? 'User-reviewed imported figures; not municipality verified'
+              : 'Includes illustrative sample figures; not evidence of a real bill',
+          previous: r.comparison.previous,
+          current: r.statement,
+          category: r.comparison.label,
+          before: r.comparison.before,
+          after: r.comparison.after,
+          difference: Math.round((r.comparison.after - r.comparison.before) * 100) / 100,
+          billingErrorConfirmed: false,
+        },
+        null,
+        2,
+      ),
+    );
+  }
+  for (const [label, statement] of [
+    ['current', r.statement],
+    ['previous', r.comparison?.previous],
+  ] as const) {
+    if (!statement?.fileId) continue;
+    const pdf = await readDocument(statement.fileId);
     if (!pdf)
       throw new Error(
-        'The linked statement PDF is missing. Unlink it in the draft or reimport the original before preparing this pack.',
+        `The ${label} statement PDF is missing. Reimport the original, or change the related statement to remove this comparison before preparing the pack.`,
       );
-    files[`evidence/00-${fileName(r.statement.fileName || 'statement.pdf')}`] = new Uint8Array(
+    const prefix = label === 'current' ? '00' : 'previous';
+    files[`evidence/${prefix}-${fileName(statement.fileName || 'statement.pdf')}`] = new Uint8Array(
       await pdf.arrayBuffer(),
     );
   }

@@ -47,6 +47,10 @@ export interface RequestEvent {
   at: string;
   text: string;
 }
+export type RequestStatement = Pick<
+  Statement,
+  'id' | 'period' | 'amount' | 'source' | 'fileId' | 'fileName'
+>;
 export interface ServiceRequest {
   id: string;
   localReference: string;
@@ -56,7 +60,8 @@ export interface ServiceRequest {
   description: string;
   desiredOutcome: string;
   incidentDate: string;
-  statement?: Pick<Statement, 'id' | 'period' | 'amount' | 'source' | 'fileId' | 'fileName'>;
+  statement?: RequestStatement;
+  comparison?: { previous: RequestStatement; label: string; before: number; after: number };
   evidence: RequestAttachment[];
   checked: string[];
   confirmed: boolean;

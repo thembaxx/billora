@@ -10,7 +10,7 @@ import {
   SparkleIcon,
   DropIcon,
   ShieldCheckIcon,
-  CloudIcon,
+  ChartLineUpIcon,
 } from '@phosphor-icons/react';
 import type { Property, Settings, View, Workspace } from '../types';
 import { dateLabel, latestStatements } from '../lib/data';
@@ -30,7 +30,6 @@ interface Props {
   onProperty: (p: Property) => void;
   onReminders: () => void;
   onTour: () => void;
-  onDemo: () => void;
   onRequests: () => void;
 }
 export function Overview({
@@ -42,7 +41,6 @@ export function Overview({
   onProperty,
   onReminders,
   onTour,
-  onDemo,
   onRequests,
 }: Props) {
   const latest = latestStatements(data);
@@ -262,17 +260,9 @@ export function Overview({
             </button>
           </div>
           <div className="setup-steps">
-            <div>
-              <span className="step-circle done">
-                <CheckIcon />
-              </span>
-              <span>
-                Explore your workspace<small>A fresh start, with sample accounts.</small>
-              </span>
-            </div>
             <button onClick={() => navigate('properties')}>
-              <span className="step-circle">
-                <BuildingsIcon />
+              <span className={`step-circle ${!sample && data.properties.length ? 'done' : ''}`}>
+                {!sample && data.properties.length ? <CheckIcon /> : <BuildingsIcon />}
               </span>
               <span>
                 Add your own property<small>Your home. Your rental. Your business.</small>
@@ -280,21 +270,33 @@ export function Overview({
               <ArrowRightIcon />
             </button>
             <button onClick={onImport}>
+              <span
+                className={`step-circle ${data.statements.some((s) => s.source === 'imported') ? 'done' : ''}`}
+              >
+                <FileTextIcon />
+              </span>
+              <span>
+                Import and review a bill<small>Check figures against your original PDF.</small>
+              </span>
+              <ArrowRightIcon />
+            </button>
+            <button onClick={() => navigate('insights')}>
+              <span className="step-circle">
+                <ChartLineUpIcon />
+              </span>
+              <span>
+                Compare two months
+                <small>Import consecutive months for the same property.</small>
+              </span>
+              <ArrowRightIcon />
+            </button>
+            <button onClick={onRequests}>
               <span className="step-circle">
                 <FileTextIcon />
               </span>
               <span>
-                Bring your first bill<small>Import a PDF and see things clearly.</small>
-              </span>
-              <ArrowRightIcon />
-            </button>
-            <button onClick={onDemo}>
-              <span className="step-circle">
-                <CloudIcon />
-              </span>
-              <span>
-                Try a connected workspace
-                <small>Cloud accounts & municipal connections · Demo</small>
+                Prepare your query pack
+                <small>Review and download evidence. Submit it yourself.</small>
               </span>
               <ArrowRightIcon />
             </button>
@@ -328,6 +330,9 @@ export function Overview({
         <a href="https://github.com/thembaxx/billora" target="_blank" rel="noreferrer">
           Made for South Africa
           <ArrowUpRightIcon size={14} />
+        </a>
+        <a href="/?help=1">
+          Help &amp; project notes <ArrowUpRightIcon size={14} />
         </a>
         <a href="/legal/">
           Privacy &amp; legal <ArrowUpRightIcon size={14} />

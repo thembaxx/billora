@@ -34,7 +34,7 @@ Validate whether consumers return to import a second statement. Then investigate
 - Local PDF patterns suggest selected fields with quoted source text, requiring user application, review and confirmation.
 - Total comparisons require consecutive months; category comparisons require reviewed breakdowns for both months. Notable increases use numerical thresholds and are not determinations of billing errors.
 - Alerts link to both statements and prefill an unsent service-request draft for review.
-- Full ZIP backup and replacement restore include PDF originals and request evidence, excluding preferences and demo profile state. ZIPs are unencrypted with a 120 MB limit; no cloud copy exists.
+- Full ZIP backup and replacement restore include PDF originals and request evidence, excluding preferences and demo profile state. Complete backups default to password encryption; an explicit plain ZIP option remains. The browser backup limit is 120 MB; no cloud copy exists.
 
 ## Location explorer and map (October 2026)
 

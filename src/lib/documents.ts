@@ -1,10 +1,11 @@
 import pdfWorkerURL from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
-import { createStore, get, set, del, clear } from 'idb-keyval';
+import { createStore, get, set, del, clear, entries } from 'idb-keyval';
 const store = createStore('billora-documents', 'originals');
 export const saveDocument = (key: string, file: Blob) => set(key, file, store);
 export const readDocument = (key: string) => get<Blob>(key, store);
 export const deleteDocument = (key: string) => del(key, store);
 export const clearDocuments = () => clear(store);
+export const documentEntries = () => entries<string, Blob>(store);
 
 export async function extractPDF(file: File): Promise<string> {
   const pdf = await import('pdfjs-dist');

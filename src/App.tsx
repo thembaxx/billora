@@ -40,11 +40,12 @@ import { Insights, Properties, Statements } from './components/Screens';
 import { ImportForm, PropertyForm } from './components/Forms';
 import { PropertyDetail, StatementDetail } from './components/DetailDialogs';
 import { SettingsDialog } from './components/SettingsDialog';
+import { GuideDialog } from './components/GuideDialog';
 import { Onboarding } from './components/Onboarding';
 import { Flower } from './components/Flower';
 import { DemoConnections } from './components/DemoConnections';
 import { RequestWorkspace } from './components/requests/RequestWorkspace';
-import { followUpDue, newRequest, type RequestMutation } from './lib/requests';
+import { followUpDue, newRequest, statementReference, type RequestMutation } from './lib/requests';
 import { clearRequestFiles, deleteRequestFile } from './lib/request-files';
 import { createFullBackup, restoreFullBackup } from './lib/backup';
 import type { BillChange } from './lib/insights';
@@ -59,7 +60,8 @@ const nav = [
 const pages: Record<View, { title: string; description: string }> = {
   overview: {
     title: 'A little clarity.\nFor everything home.',
-    description: 'Your municipal accounts, together. Just as they should be.',
+    description:
+      'Review municipal statements, compare months and prepare a query evidence pack. Saved on this device.',
   },
   properties: {
     title: 'All your places.\nOne clear picture.',
@@ -83,11 +85,13 @@ type Dialog =
   | 'tour'
   | 'demo'
   | 'requests'
+  | 'help'
   | null;
 const initialDialog = (): Dialog => {
   const params = new URLSearchParams(location.search);
   if (params.has('import')) return 'import';
   if (params.has('settings')) return 'settings';
+  if (params.has('help')) return 'help';
   if (params.has('requests')) return 'requests';
   return null;
 };
@@ -101,12 +105,12 @@ const initialView = (): View => {
 };
 const initialSettings = (): Settings => {
   try {
+    const saved = JSON.parse(localStorage.getItem('billora-settings') || '{}');
     return {
-      theme: 'system',
-      reduceMotion: false,
-      hideBalances: false,
-      name: 'Alex',
-      ...JSON.parse(localStorage.getItem('billora-settings') || '{}'),
+      theme: ['light', 'dark', 'system'].includes(saved?.theme) ? saved.theme : 'system',
+      reduceMotion: saved?.reduceMotion === true,
+      hideBalances: saved?.hideBalances === true,
+      name: typeof saved?.name === 'string' ? saved.name.slice(0, 35) : 'Alex',
     };
   } catch {
     return { theme: 'system', reduceMotion: false, hideBalances: false, name: 'Alex' };
@@ -114,7 +118,9 @@ const initialSettings = (): Settings => {
 };
 
 export default function App() {
-  const [data, setData] = useState<Workspace>(readWorkspace);
+  const [loaded] = useState(readWorkspace);
+  const [loadError, setLoadError] = useState(loaded.error);
+  const [data, setData] = useState<Workspace>(loaded.data);
   const dataRef = useRef(data);
   dataRef.current = data;
   const [requestContext, setRequestContext] = useState<{ id: string; edit: boolean } | null>(null);
@@ -126,8 +132,15 @@ export default function App() {
   const [query, setQuery] = useState('');
   const [toast, setToast] = useState('');
   const [offline, setOffline] = useState(!navigator.onLine);
-  const [welcome, setWelcome] = useState(() => !localStorage.getItem('billora-welcomed'));
+  const [welcome, setWelcome] = useState(() => {
+    try {
+      return !localStorage.getItem('billora-welcomed');
+    } catch {
+      return false;
+    }
+  });
   const [install, setInstall] = useState<InstallPrompt | null>(null);
+  const [returnToImport, setReturnToImport] = useState(false);
   const [launchFile, setLaunchFile] = useState<File | undefined>();
   const systemReduced = useReducedMotion();
   const reduced = settings.reduceMotion || !!systemReduced;
@@ -255,7 +268,11 @@ export default function App() {
     },
     { scope, dependencies: [view, reduced] },
   );
-  const update = (next: Workspace) => {
+  const update = (next: Workspace, recovering = false) => {
+    if (loadError && !recovering) {
+      notify('Changes are paused. Restore a backup or clear the unreadable workspace in Settings.');
+      return false;
+    }
     try {
       localStorage.setItem('billora-workspace', JSON.stringify(next));
       dataRef.current = next;
@@ -273,6 +290,12 @@ export default function App() {
   ): ServiceRequest | null => {
     const request = newRequest(p, statement);
     if (change) {
+      request.comparison = {
+        previous: statementReference(change.previous),
+        label: change.label,
+        before: change.before,
+        after: change.after,
+      };
       request.description =
         'Please review the change in ' +
         change.label.toLowerCase() +
@@ -296,13 +319,30 @@ export default function App() {
   };
   const mutateRequest: RequestMutation = (id, change) => {
     const current = dataRef.current;
-    if (!current.requests.some((r) => r.id === id)) return false;
-    return update({
+    const previous = current.requests.find((r) => r.id === id);
+    if (!previous) return false;
+    const nextRequest = { ...change(previous), updatedAt: new Date().toISOString() };
+    const next = {
       ...current,
-      requests: current.requests.map((r) =>
-        r.id === id ? { ...change(r), updatedAt: new Date().toISOString() } : r,
-      ),
-    });
+      requests: current.requests.map((r) => (r.id === id ? nextRequest : r)),
+    };
+    if (!update(next)) return false;
+    // Unlinking a bill can release an original retained only for this request.
+    const released = [previous.statement?.fileId, previous.comparison?.previous.fileId].filter(
+      (fileId): fileId is string =>
+        !!fileId &&
+        !next.statements.some((s) => s.fileId === fileId) &&
+        !next.requests.some(
+          (r) => r.statement?.fileId === fileId || r.comparison?.previous.fileId === fileId,
+        ),
+    );
+    if (released.length)
+      void Promise.all([...new Set(released)].map(deleteDocument)).catch(() =>
+        notify(
+          'Request updated, but an unlinked PDF could not be cleared. Use Clear workspace or browser site-data controls to finish removing it.',
+        ),
+      );
+    return true;
   };
   const openRequests = (context: { id: string; edit: boolean } | null = null) => {
     setRequestContext(context);
@@ -335,9 +375,16 @@ export default function App() {
   const closeDialog = () => {
     setDialog(null);
     setLaunchFile(undefined);
+    const url = new URL(location.href);
+    for (const key of ['import', 'settings', 'requests', 'help']) url.searchParams.delete(key);
+    history.replaceState({}, '', url);
   };
   const finishTour = () => {
-    localStorage.setItem('billora-welcomed', 'true');
+    try {
+      localStorage.setItem('billora-welcomed', 'true');
+    } catch {
+      /* Tour remains usable without storage. */
+    }
     setWelcome(false);
     setDialog(null);
   };
@@ -413,6 +460,31 @@ export default function App() {
         </div>
       </header>
       <main id="main-content" ref={scope} className="workspace" tabIndex={-1}>
+        {loadError && (
+          <section
+            className="info-banner recovery-banner"
+            role="alert"
+            aria-label="Workspace recovery"
+          >
+            <div>
+              <strong>Let’s recover your workspace.</strong>
+              <p>{loadError}</p>
+              {loaded.raw !== null && (
+                <button
+                  className="button secondary small"
+                  onClick={() =>
+                    download(loaded.raw!, 'billora-unreadable-records.json', 'application/json')
+                  }
+                >
+                  Download saved records
+                </button>
+              )}
+              <button className="button secondary small" onClick={() => setDialog('settings')}>
+                Open recovery settings
+              </button>
+            </div>
+          </section>
+        )}
         {offline && (
           <div className="offline-banner" role="status">
             <WifiSlashIcon size={18} />
@@ -486,7 +558,11 @@ export default function App() {
               className="icon-button"
               aria-label="Dismiss welcome"
               onClick={() => {
-                localStorage.setItem('billora-welcomed', 'true');
+                try {
+                  localStorage.setItem('billora-welcomed', 'true');
+                } catch {
+                  /* Dismiss for this visit. */
+                }
                 setWelcome(false);
               }}
             >
@@ -524,7 +600,6 @@ export default function App() {
             onProperty={setProperty}
             onReminders={() => setDialog('reminders')}
             onTour={() => setDialog('tour')}
-            onDemo={() => setDialog('demo')}
             onRequests={() => openRequests()}
           />
         )}
@@ -560,7 +635,12 @@ export default function App() {
       </main>
       {dialog === 'add' && (
         <PropertyForm
-          onClose={closeDialog}
+          onClose={() => {
+            if (returnToImport) {
+              setReturnToImport(false);
+              setDialog('import');
+            } else closeDialog();
+          }}
           onSave={(p) => {
             const personal = personalWorkspace(data);
             const ok = update({ ...personal, properties: [...personal.properties, p] });
@@ -574,7 +654,10 @@ export default function App() {
           data={data}
           initialFile={launchFile}
           onClose={closeDialog}
-          onAddProperty={() => setDialog('add')}
+          onAddProperty={() => {
+            setReturnToImport(true);
+            setDialog('add');
+          }}
           onSave={(s) => {
             const ok = update({
               ...data,
@@ -620,38 +703,31 @@ export default function App() {
             }
           }}
           onBackup={async (password) => {
-            try {
-              const blob = await createFullBackup(data);
-              const secured = password ? await encryptBackup(blob, password) : blob;
-              download(
-                secured,
-                password ? 'billora-complete-backup.billora' : 'billora-complete-backup.zip',
-                secured.type,
-              );
-              notify(
-                password
-                  ? 'Password-protected backup downloaded. Keep its password separately; it cannot be recovered.'
-                  : 'Unencrypted ZIP downloaded. Keep this file private.',
-              );
-            } catch (error) {
-              notify(error instanceof Error ? error.message : 'Could not create full backup.');
-            }
+            const blob = await createFullBackup(data);
+            const secured = password ? await encryptBackup(blob, password) : blob;
+            download(
+              secured,
+              password ? 'billora-complete-backup.billora' : 'billora-complete-backup.zip',
+              secured.type,
+            );
+            notify(
+              password
+                ? 'Password-protected backup downloaded. Keep its password separately; it cannot be recovered.'
+                : 'Unencrypted ZIP downloaded. Keep this file private.',
+            );
           }}
           onRestore={async (file, password) => {
-            try {
-              const original = (await isEncryptedBackup(file))
-                ? new File([await decryptBackup(file, password || '')], 'restored.zip', {
-                    type: 'application/zip',
-                  })
-                : file;
-              const restored = await restoreFullBackup(original, dataRef.current);
-              dataRef.current = restored;
-              setData(restored);
-              navigate('overview');
-              notify('Full workspace restored from your local ZIP.');
-            } catch (error) {
-              notify(error instanceof Error ? error.message : 'Could not restore ZIP backup.');
-            }
+            const original = (await isEncryptedBackup(file))
+              ? new File([await decryptBackup(file, password || '')], 'restored.zip', {
+                  type: 'application/zip',
+                })
+              : file;
+            const restored = await restoreFullBackup(original);
+            dataRef.current = restored;
+            setData(restored);
+            setLoadError('');
+            navigate('overview');
+            notify('Full workspace restored from your local ZIP.');
           }}
           onExport={() => {
             download(
@@ -669,8 +745,9 @@ export default function App() {
           }}
           onClear={async () => {
             try {
-              await Promise.all([clearDocuments(), clearRequestFiles()]);
-              if (update({ properties: [], statements: [], requests: [] })) {
+              if (update({ properties: [], statements: [], requests: [] }, true)) {
+                setLoadError('');
+                await Promise.all([clearDocuments(), clearRequestFiles()]);
                 setDialog(null);
                 notify('A clean slate. Your workspace is ready for your own accounts.');
               }
@@ -683,6 +760,13 @@ export default function App() {
           onTour={() => setDialog('tour')}
           onDemo={() => setDialog('demo')}
           onRequests={() => openRequests()}
+        />
+      )}
+      {dialog === 'help' && (
+        <GuideDialog
+          onClose={closeDialog}
+          onSettings={() => setDialog('settings')}
+          onImport={showImport}
         />
       )}
       {dialog === 'tour' && (
@@ -704,19 +788,32 @@ export default function App() {
           onDelete={async (id) => {
             const request = dataRef.current.requests.find((r) => r.id === id);
             if (!request) return false;
+            const current = dataRef.current;
+            const remaining = current.requests.filter((r) => r.id !== id);
+            if (!update({ ...current, requests: remaining })) return false;
             try {
               await Promise.all(request.evidence.map((f) => deleteRequestFile(f.id)));
-              const current = dataRef.current;
-              const removed = update({
-                ...current,
-                requests: current.requests.filter((r) => r.id !== id),
-              });
-              if (removed) notify('Local request and its attached evidence removed.');
-              return removed;
+              for (const fileId of new Set([
+                request.statement?.fileId,
+                request.comparison?.previous.fileId,
+              ])) {
+                if (
+                  fileId &&
+                  !current.statements.some((s) => s.fileId === fileId) &&
+                  !remaining.some(
+                    (r) =>
+                      r.statement?.fileId === fileId || r.comparison?.previous.fileId === fileId,
+                  )
+                )
+                  await deleteDocument(fileId);
+              }
+              notify('Local request and its attached evidence removed.');
             } catch {
-              notify('Could not remove the request evidence. Please try again.');
-              return false;
+              notify(
+                'Request removed, but some local files could not be cleared. Use Clear workspace or browser site-data controls to finish removing files.',
+              );
             }
+            return true;
           }}
         />
       )}
@@ -929,15 +1026,26 @@ export default function App() {
           onDelete={() => {
             void (async () => {
               try {
-                if (currentStatement.fileId) await deleteDocument(currentStatement.fileId);
+                const fileId = currentStatement.fileId;
+                const linked =
+                  Boolean(fileId) &&
+                  data.requests.some(
+                    (r) =>
+                      r.statement?.fileId === fileId || r.comparison?.previous.fileId === fileId,
+                  );
                 if (
                   update({
                     ...data,
                     statements: data.statements.filter((s) => s.id !== currentStatement.id),
                   })
                 ) {
+                  if (fileId && !linked) await deleteDocument(fileId);
                   setStatementId(null);
-                  notify('Statement removed from this device.');
+                  notify(
+                    linked
+                      ? 'Statement removed from the library. Its PDF stays with your linked request.'
+                      : 'Statement removed from this device.',
+                  );
                 }
               } catch {
                 notify('Could not remove the original PDF. Please try again.');

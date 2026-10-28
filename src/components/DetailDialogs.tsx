@@ -221,7 +221,10 @@ export function StatementDetail({
         <div className="delete-section">
           {confirm ? (
             <>
-              <p>Remove this statement and its original PDF from this device?</p>
+              <p>
+                Remove this statement from the library? Its original PDF is deleted unless it is
+                linked to a saved request. Linked PDFs stay with that request until it is removed.
+              </p>
               <div>
                 <button className="button secondary" onClick={() => setConfirm(false)}>
                   Keep statement

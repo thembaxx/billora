@@ -1,6 +1,18 @@
 # Billora
 
-A little clarity for everything home. An interactive municipal account organiser for South Africa, inspired by the supplied property dashboards and warm geometric branding.
+Review municipal statements, compare consecutive months and prepare a billing-query evidence pack. Billora is a browser-local organiser for South African municipal accounts; it does not connect to live municipal billing systems or submit queries.
+
+[Live app](https://billora.themba.dev/) · [Help & project notes](https://billora.themba.dev/?help=1) · [Case study](docs/CASE_STUDY.md) · [Release evidence](docs/LAUNCH_EVIDENCE.md)
+
+## Try the core journey
+
+1. Explore the labelled illustrative accounts, or choose **Start my workspace** and add your own property.
+2. Import a PDF (up to 15 MB) or enter a bill manually. Open the original, apply suggestions if useful, and review the month, total and due date before saving.
+3. Add the previous or next month for the same property. **Insights** compares consecutive months; category comparisons require breakdowns for both.
+4. Prepare a query from a notable increase, or use **Service requests** for any concern. Check the letter and evidence, then download the request ZIP. Comparison queries include both saved originals and the figures behind the comparison.
+5. Submit through the official municipal channel yourself. Keep an encrypted full workspace backup from **Settings**; the request ZIP is a sharing pack, not a restore file.
+
+For app problems, [open a GitHub issue](https://github.com/thembaxx/billora/issues) with browser, steps and an anonymised example. Issues are public: never attach personal bills, account numbers, addresses, passwords or backups. Billora cannot remotely retrieve local records; billing decisions belong with the municipality.
 
 ## Run
 
@@ -18,6 +30,8 @@ npm run lint
 npm run format:check
 npm test
 ```
+
+Set `BILLORA_TEST_PORT=3102` (or another unused port) to override the browser-test preview port. The server uses strict port binding to avoid silently testing a different app.
 
 The production output is `dist/`. Any HTTPS static host with an SPA fallback can serve it. The Sites deployment is configured in `.openai/hosting.json`. When moving to another domain, update the canonical and Open Graph URLs in `index.html`, `public/robots.txt` and `public/sitemap.xml`.
 
@@ -48,7 +62,7 @@ All direct dependencies were installed from npm's `latest` stable tags on 22 Oct
 
 This release is a functional browser-local MVP with **explicit demo integrations**. Demo profiles, consent and municipal sync fixtures are simulated on the device. It has **no real cloud authentication, backend, cross-device sync, live municipal account retrieval, payment processing or automatic query submission**. It is not a private cloud vault. Initial data is illustrative sample data dated May–October 2026. Start an empty personal workspace before importing real bills; legacy mixed records are separated on load.
 
-Account metadata and service-request records are in `localStorage` under `billora-workspace`; preferences use `billora-settings`. Demo profiles and connections use `billora-demo`; reset them separately in the demo dialog. Original PDFs are in the `billora-documents` IndexedDB database; request attachments are in `billora-request-evidence`. These files, notes and extracted text stay on the device unless you choose to download/share them. Do not use sensitive documents in shared browser profiles. Clearing site data can remove every record. Export account data and download PDFs/request ZIPs before resetting or changing devices. Records-only JSON exports contain metadata but not binary files. Full ZIP backups contain available original PDFs and evidence files, replacing current records on restore; they exclude demo profiles and preferences. Full backups default to password encryption; explicitly exported plain ZIPs, request ZIP packs and records-only JSON remain unencrypted. Workspace reset clears request records and evidence along with properties and statements; it preserves preferences and demo records.
+Account metadata and service-request records are in `localStorage` under `billora-workspace`; preferences use `billora-settings`. Demo profiles and connections use `billora-demo`; reset them separately in the demo dialog. Original PDFs are in the `billora-documents` IndexedDB database; request attachments are in `billora-request-evidence`. These files, notes and extracted text stay on the device unless you choose to download/share them. Do not use sensitive documents in shared browser profiles. Clearing site data can remove every record. Export account data and download PDFs/request ZIPs before resetting or changing devices. Records-only JSON exports contain metadata but not binary files. Full ZIP backups contain available original PDFs and evidence files, replacing current records on restore; they exclude demo profiles and preferences. Unreadable workspace records pause changes and offer an exact records download plus restore/clear controls. Restore validates records before replacement and snapshots all existing original/evidence files and exact stored metadata for rollback if replacement fails. Removing a statement preserves its PDF while a saved request still links to it; removing the last reference deletes the retained PDF. Full backups default to password encryption; explicitly exported plain ZIPs, request ZIP packs and records-only JSON remain unencrypted. Workspace reset clears request records and evidence along with properties and statements; it preserves preferences and demo records.
 
 PDF text extraction may suggest a balance or due date with quoted evidence, but never asserts it as verified. The user explicitly enters and reviews those figures before saving. Optional category amounts are validated against the total; the remainder is labelled “Other / unallocated”. Insights are based on imported figures and do not confirm billing errors. Reminders are ICS downloads for a calendar application, not background push notifications. Browser PWA and native share/file-handling capabilities vary by browser. Map tiles load from OpenStreetMap only for the visible viewport and are not offered for offline download. Explicit place searches are sent to Nominatim, which is not suitable for heavy/commercial geocoding traffic; use an appropriately provisioned service before scaling. Browser geolocation remains opt-in, and coordinates are saved only when selecting a property pin.
 

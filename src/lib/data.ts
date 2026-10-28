@@ -1,4 +1,5 @@
 import type { Workspace, Statement } from '../types';
+import { parseWorkspace } from './workspace';
 
 export const money = (value: number) =>
   `R ${value.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -77,18 +78,31 @@ export function personalWorkspace(data: Workspace): Workspace {
   };
 }
 
-export function readWorkspace(): Workspace {
+export interface WorkspaceLoad {
+  data: Workspace;
+  error: string;
+  raw: string | null;
+}
+export function readWorkspace(): WorkspaceLoad {
+  let raw: string | null = null;
   try {
-    const d = JSON.parse(localStorage.getItem('billora-workspace') || 'null');
-    if (d && Array.isArray(d.properties) && Array.isArray(d.statements))
-      return d.statements.some((s: Statement) => s.source === 'sample') &&
-        d.statements.some((s: Statement) => s.source === 'imported')
-        ? personalWorkspace({ ...d, requests: Array.isArray(d.requests) ? d.requests : [] })
-        : { ...d, requests: Array.isArray(d.requests) ? d.requests : [] };
+    raw = localStorage.getItem('billora-workspace');
+    if (raw === null) return { data: demoData(), error: '', raw: null };
+    const data = parseWorkspace(JSON.parse(raw));
+    const personal =
+      data.statements.some((s) => s.source === 'sample') &&
+      data.statements.some((s) => s.source === 'imported')
+        ? personalWorkspace(data)
+        : data;
+    return { data: personal, error: '', raw };
   } catch {
-    /* An unavailable store falls back to sample data. */
+    return {
+      data: { properties: [], statements: [], requests: [] },
+      error:
+        'Your saved workspace could not be read. Changes are paused so it is not overwritten. Download the saved records for recovery, restore a full backup in Settings, or explicitly clear this workspace.',
+      raw,
+    };
   }
-  return demoData();
 }
 export function download(content: Blob | string, name: string, type = 'text/plain') {
   const url = URL.createObjectURL(

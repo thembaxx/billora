@@ -1,7 +1,8 @@
-import { createStore, get, set, del, clear } from 'idb-keyval';
+import { createStore, get, set, del, clear, entries } from 'idb-keyval';
 
 const store = createStore('billora-request-evidence', 'files');
 export const saveRequestFile = (id: string, file: Blob) => set(id, file, store);
 export const readRequestFile = (id: string) => get<Blob>(id, store);
 export const deleteRequestFile = (id: string) => del(id, store);
 export const clearRequestFiles = () => clear(store);
+export const requestFileEntries = () => entries<string, Blob>(store);

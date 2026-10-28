@@ -18,10 +18,13 @@ class AppBoundary extends React.Component<{ children: React.ReactNode }, { faile
       <main className="recovery">
         <img src="/logo.png" width="64" alt="Billora" />
         <h1>Let’s get you back home.</h1>
-        <p>Billora couldn’t open this screen. Your saved account data is still on this device.</p>
+        <p>Billora couldn’t open this screen. Reload to try again.</p>
         <button className="button primary" onClick={() => location.reload()}>
           Reload Billora
         </button>
+        <p>
+          <a href="/legal/data/">Read the data and recovery guide</a>
+        </p>
       </main>
     ) : (
       this.props.children
