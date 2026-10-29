@@ -23,6 +23,7 @@
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check .",
     "test": "playwright test",
+    "test:vision": "node --test tests/vision-meter.test.mjs",
     "assets": "node scripts/build-cabinet.mjs && node scripts/brand-assets.mjs",
     "legal": "node scripts/build-legal.mjs"
   },
