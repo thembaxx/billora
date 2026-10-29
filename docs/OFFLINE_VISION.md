@@ -6,7 +6,7 @@ Open `/vision/index.html` or the small in-app link. Select a JPEG, PNG or WebP i
 
 ## billora use case
 
-Meter-reading and municipal-statement photographs. Existing PDF import and saved readings are unchanged; copy results for manual entry and compare against the original.
+Meter-reading and municipal-statement photographs. A meter-review panel now offers **labeled OCR candidates with their original source lines** and a separate manual previous/current reading comparison. The user must explicitly confirm figures; calculations cannot establish a billing discrepancy and no values are saved to workspace statements or requests. Copy the reviewed summary into an appropriate service request only after verification. Existing PDF import remains unchanged.
 
 ## Privacy and network boundary
 
