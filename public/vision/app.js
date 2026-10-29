@@ -19,6 +19,7 @@ const meterReport=document.querySelector('#meter-report'),meterCopy=document.que
 let verifiedReport='';
 function invalidateMeter(){verifiedReport='';meterVerified.checked=false;meterCopy.disabled=true;meterReport.textContent='';meterStatus.textContent='Review and confirm both readings against the original image.';}
 for(const field of [...Object.values(readingInputs),document.querySelector('#meter-date'),document.querySelector('#meter-unit')])field.addEventListener('input',invalidateMeter);
+meterVerified.addEventListener('change',()=>{if(!meterVerified.checked){verifiedReport='';meterCopy.disabled=true;meterReport.textContent='';}});
 function updateMeterCandidates(text){
  suggestionBox.replaceChildren();
  const suggestion=suggestMeterReadings(text);
