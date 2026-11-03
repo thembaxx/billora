@@ -142,8 +142,10 @@
   border-radius: 18px;
   background: var(--surface-soft);
 }
-.request-list li > button:hover {
-  border-color: var(--muted);
+@media (hover: hover) and (pointer: fine) {
+  .request-list li > button:hover {
+    border-color: var(--muted);
+  }
 }
 .request-list-icon {
   width: 43px;
