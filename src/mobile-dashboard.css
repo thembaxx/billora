@@ -1,0 +1,61 @@
+/* Calm municipal dashboard: readable figures and forms across small devices.
+   Keep original chart, bill calculations, PWA and local document processing intact. */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+:is(.workspace, .dashboard-grid, .statement-library, .card, .request-workspace) {
+  min-width: 0;
+}
+:is(.statement-name, .request-list-copy, .request-summary-copy, .category-row) {
+  overflow-wrap: anywhere;
+}
+.table-scroll {
+  max-width: 100%;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-padding-inline: 16px;
+}
+.form-stack :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea),
+.form-columns :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea) {
+  font-size: 16px;
+}
+@media (pointer: coarse), (max-width: 760px) {
+  :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea) {
+    font-size: 16px !important;
+  }
+  :is(.toolbar-actions .button, .request-editor-actions .button, .request-action-row .button, .modal-head .icon-button) {
+    min-height: 44px;
+  }
+  .page-description,
+  .request-entry p,
+  .request-review {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+}
+@media (max-width: 560px) {
+  .screen-toolbar {
+    flex-wrap: wrap;
+    row-gap: 12px;
+  }
+  .category-row > div > strong {
+    font-size: 13px;
+  }
+  .category-row > .numeric {
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+  .request-editor-actions .button {
+    font-size: 14px;
+  }
+  .request-letter-preview {
+    min-width: 0;
+    overflow-x: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .table-scroll {
+    scroll-behavior: auto;
+  }
+}
