@@ -7,6 +7,7 @@ import './styles.css';
 import './polish.css';
 import './requests.css';
 import './location.css';
+import './mobile-dashboard.css';
 
 class AppBoundary extends React.Component<{ children: React.ReactNode }, { failed: boolean }> {
   state = { failed: false };
