@@ -314,8 +314,10 @@
   color: #353336;
   cursor: pointer;
 }
-.live-map-controls button:hover {
-  background: #fff0e8;
+@media (hover: hover) and (pointer: fine) {
+  .live-map-controls button:hover {
+    background: #fff0e8;
+  }
 }
 .live-map-controls button:disabled {
   opacity: 0.4;
@@ -334,8 +336,10 @@
   padding: 2px 6px;
   text-decoration: none;
 }
-.live-map-attribution:hover {
-  text-decoration: underline;
+@media (hover: hover) and (pointer: fine) {
+  .live-map-attribution:hover {
+    text-decoration: underline;
+  }
 }
 .live-map-offline {
   position: absolute;

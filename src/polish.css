@@ -2051,9 +2051,11 @@ html[data-theme='dark'] .demo-disclosure {
   justify-content: space-between;
   gap: 10px;
 }
-.settings-legal a:hover {
-  text-decoration: underline;
-  text-underline-offset: 3px;
+@media (hover: hover) and (pointer: fine) {
+  .settings-legal a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
 }
 .inline-policy-link {
   text-decoration: underline;
