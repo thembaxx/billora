@@ -27,11 +27,13 @@ export default function Building({
       setFailed(true);
       return;
     }
+    const lowPower = window.matchMedia('(max-width: 760px), (pointer: coarse)').matches;
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
     camera.position.set(7.4, 5.7, 8.5);
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
-    renderer.shadowMap.enabled = true;
+    // Keep glass and frame detail sharp on mobile without an oversized buffer.
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, lowPower ? 1.25 : 1.75));
+    renderer.shadowMap.enabled = !lowPower;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -51,7 +53,7 @@ export default function Building({
     scene.add(ambient);
     const sun = new THREE.DirectionalLight(0xffe6ce, 4);
     sun.position.set(-3, 8, 5);
-    sun.castShadow = true;
+    sun.castShadow = !lowPower;
     sun.shadow.mapSize.set(1024, 1024);
     sun.shadow.camera.left = -5;
     sun.shadow.camera.right = 5;
@@ -178,14 +180,19 @@ export default function Building({
       visible = entry.isIntersecting;
     });
     observer.observe(el);
-    const render = () => {
+    let lastDraw = 0;
+    const render = (now: number) => {
       frame = requestAnimationFrame(render);
-      if (visible && !document.hidden) {
+      // 30 FPS is intentional for a decorative mobile building; desktop can
+      // render at 60 FPS. A hidden or offscreen scene only keeps a cheap RAF.
+      const targetMs = lowPower ? 1000 / 30 : 1000 / 60;
+      if (visible && !document.hidden && now - lastDraw >= targetMs) {
+        lastDraw = now;
         controls.update();
         renderer.render(scene, camera);
       }
     };
-    render();
+    frame = requestAnimationFrame(render);
     reset.current = () => {
       camera.position.set(7.4, 5.7, 8.5);
       controls.target.set(0, 1.45, 0);
